@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Governance Command Center — Risk Classifier</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F7F8FA;
+    --panel:#FFFFFF;
+    --ink:#151B26;
+    --ink-soft:#4B5565;
+    --ink-faint:#8A93A3;
+    --line:#E3E7ED;
+    --navy:#111A2E;
+    --navy-soft:#1D2A44;
+    --accent:#2A5CDB;
+    --accent-soft:#EAF0FD;
+    --unacceptable:#B3261E;
+    --unacceptable-bg:#FCEBEA;
+    --high:#C2560C;
+    --high-bg:#FDF0E4;
+    --limited:#9A7B00;
+    --limited-bg:#FBF3D9;
+    --minimal:#1E7A46;
+    --minimal-bg:#E6F4EC;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', -apple-system, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    font-family:var(--sans);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+  }
+  .topbar{
+    background:var(--navy);
+    color:#fff;
+    padding:18px 32px;
+    display:flex;
+    align-items:baseline;
+    gap:14px;
+    border-bottom:3px solid var(--accent);
+  }
+  .topbar .brand{font-size:14px; font-weight:600; letter-spacing:0.02em; color:#AEB9CF;}
+  .topbar .module{font-size:18px; font-weight:600;}
+  .topbar .tag{
+    margin-left:auto;
+    font-family:var(--mono);
+    font-size:11px;
+    color:#AEB9CF;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+  }
+  .layout{
+    max-width:1240px;
+    margin:0 auto;
+    padding:32px;
+    display:grid;
+    grid-template-columns:420px 1fr;
+    gap:28px;
+    align-items:start;
+  }
+  @media (max-width: 900px){ .layout{grid-template-columns:1fr;} }
+
+  .card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:6px;
+  }
+  .card-head{
+    padding:16px 20px;
+    border-bottom:1px solid var(--line);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .card-head h2{
+    margin:0;
+    font-size:14px;
+    font-weight:600;
+    letter-spacing:0.01em;
+  }
+  .card-head .count{
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--ink-faint);
+  }
+  .card-body{padding:20px;}
+
+  label{
+    display:block;
+    font-size:12px;
+    font-weight:600;
+    color:var(--ink-soft);
+    margin-bottom:6px;
+    margin-top:16px;
+  }
+  label:first-child{margin-top:0;}
+  input[type=text], textarea, select{
+    width:100%;
+    padding:10px 12px;
+    border:1px solid var(--line);
+    border-radius:4px;
+    font-family:var(--sans);
+    font-size:13px;
+    color:var(--ink);
+    background:#fff;
+  }
+  textarea{resize:vertical; min-height:88px; line-height:1.5;}
+  input:focus, textarea:focus, select:focus{
+    outline:none;
+    border-color:var(--accent);
+    box-shadow:0 0 0 3px var(--accent-soft);
+  }
+  .hint{font-size:11px; color:var(--ink-faint); margin-top:4px;}
+
+  .btn{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:11px 18px;
+    border-radius:4px;
+    border:none;
+    font-family:var(--sans);
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .btn-primary{background:var(--navy); color:#fff; width:100%; justify-content:center; margin-top:20px;}
+  .btn-primary:hover{background:var(--navy-soft);}
+  .btn-ghost{
+    background:transparent;
+    color:var(--accent);
+    border:1px solid var(--line);
+    font-size:11px;
+    padding:6px 10px;
+  }
+  .btn-ghost:hover{border-color:var(--accent); background:var(--accent-soft);}
+
+  .samples{display:flex; flex-direction:column; gap:6px; margin-top:16px;}
+  .sample-btn{
+    text-align:left;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:4px;
+    padding:9px 12px;
+    font-size:12px;
+    color:var(--ink-soft);
+    cursor:pointer;
+    font-family:var(--sans);
+  }
+  .sample-btn:hover{border-color:var(--accent); color:var(--accent);}
+
+  /* Output panel */
+  .empty-state{
+    padding:64px 32px;
+    text-align:center;
+    color:var(--ink-faint);
+  }
+  .empty-state .mark{
+    font-family:var(--mono);
+    font-size:11px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--ink-faint);
+    margin-bottom:10px;
+  }
+  .empty-state p{font-size:13px; max-width:360px; margin:8px auto 0; line-height:1.6;}
+
+  .verdict{
+    display:flex;
+    align-items:center;
+    gap:16px;
+    padding:22px 20px;
+    border-bottom:1px solid var(--line);
+  }
+  .tier-badge{
+    font-family:var(--mono);
+    font-size:12px;
+    font-weight:600;
+    letter-spacing:0.03em;
+    text-transform:uppercase;
+    padding:8px 14px;
+    border-radius:4px;
+    white-space:nowrap;
+  }
+  .tier-Unacceptable{color:var(--unacceptable); background:var(--unacceptable-bg);}
+  .tier-High{color:var(--high); background:var(--high-bg);}
+  .tier-Limited{color:var(--limited); background:var(--limited-bg);}
+  .tier-Minimal{color:var(--minimal); background:var(--minimal-bg);}
+
+  .verdict-text h3{margin:0 0 4px; font-size:15px;}
+  .verdict-text p{margin:0; font-size:12px; color:var(--ink-soft); line-height:1.5;}
+
+  .section-label{
+    font-family:var(--mono);
+    font-size:10.5px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--ink-faint);
+    padding:16px 20px 8px;
+  }
+
+  .trail{padding:0 20px 20px; display:flex; flex-direction:column; gap:8px;}
+  .trail-row{
+    display:flex;
+    gap:12px;
+    align-items:flex-start;
+    padding:10px 12px;
+    background:#FAFBFC;
+    border:1px solid var(--line);
+    border-radius:4px;
+  }
+  .fw-badge{
+    font-family:var(--mono);
+    font-size:11px;
+    font-weight:700;
+    width:26px;
+    height:26px;
+    min-width:26px;
+    border-radius:4px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:#fff;
+  }
+  .fw-badge.G{background:#7C3AED;}
+  .fw-badge.N{background:#0891B2;}
+  .fw-badge.I{background:#1D4ED8;}
+  .trail-content .ref{font-family:var(--mono); font-size:12px; font-weight:600; color:var(--ink);}
+  .trail-content .desc{font-size:12px; color:var(--ink-soft); margin-top:2px; line-height:1.45;}
+
+  .reasoning-box{
+    margin:0 20px 20px;
+    padding:14px 16px;
+    background:#FAFBFC;
+    border-left:3px solid var(--accent);
+    border-radius:0 4px 4px 0;
+    font-size:12.5px;
+    color:var(--ink-soft);
+    line-height:1.6;
+  }
+  .reasoning-box strong{color:var(--ink);}
+
+  .disclaimer{
+    margin:20px;
+    padding:12px 14px;
+    background:var(--limited-bg);
+    border-radius:4px;
+    font-size:11.5px;
+    color:#6B5900;
+    line-height:1.5;
+  }
+
+  footer{
+    max-width:1240px;
+    margin:0 auto;
+    padding:8px 32px 40px;
+    font-size:11px;
+    color:var(--ink-faint);
+    font-family:var(--mono);
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <span class="module">AI Governance Command Center</span>
+  <span class="brand">Risk Classifier</span>
+  <span class="tag">Module 01 / 05 · Rules-Based Engine</span>
+</div>
+
+<div class="layout">
+
+  <!-- INPUT PANEL -->
+  <div class="card">
+    <div class="card-head">
+      <h2>AI Use Case Intake</h2>
+    </div>
+    <div class="card-body">
+      <label for="name">Use case name</label>
+      <input type="text" id="name" placeholder="e.g. Resume screening tool">
+
+      <label for="desc">Description</label>
+      <textarea id="desc" placeholder="Describe what the AI system does, who it affects, and the decision or output it produces."></textarea>
+
+      <label for="data">Data types processed</label>
+      <input type="text" id="data" placeholder="e.g. CVs, employment history, demographic data">
+
+      <label for="context">Deployment context</label>
+      <select id="context">
+        <option value="">Select a context…</option>
+        <option>Employment / HR</option>
+        <option>Financial services / credit</option>
+        <option>Healthcare</option>
+        <option>Law enforcement / justice</option>
+        <option>Education</option>
+        <option>Public sector / critical infrastructure</option>
+        <option>Customer-facing chatbot or assistant</option>
+        <option>Synthetic media / content generation</option>
+        <option>Internal operations (non-customer-facing)</option>
+        <option>Other / general purpose</option>
+      </select>
+
+      <button class="btn btn-primary" onclick="runClassifier()">Classify risk tier</button>
+
+      <div style="margin-top:24px; border-top:1px solid var(--line); padding-top:16px;">
+        <label style="margin-top:0;">Reference cases</label>
+        <div class="samples">
+          <button class="sample-btn" onclick="loadSample(0)">Clinical diagnostic AI — retinopathy screening</button>
+          <button class="sample-btn" onclick="loadSample(1)">Automated resume screening for hiring</button>
+          <button class="sample-btn" onclick="loadSample(2)">Internal support chatbot</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OUTPUT PANEL -->
+  <div class="card" id="output-card">
+    <div class="card-head">
+      <h2>Classification Output</h2>
+      <span class="count" id="run-count">no runs yet</span>
+    </div>
+    <div id="output-body">
+      <div class="empty-state">
+        <div class="mark">Awaiting input</div>
+        <p>Submit a use case on the left, or load a reference case, to generate a risk tier with a full GDPR / NIST AI RMF / ISO 42001 citation trail.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>ai-governance-command-center / src / classifier — rules engine implements docs/methodology/risk-classifier-methodology.md</footer>
+
+<script>
+let runCount = 0;
+
+const samples = [
+  {
+    name: "Clinical diagnostic AI — retinopathy screening",
+    desc: "AI system analyzes retinal images to detect diabetic retinopathy and recommends referral for treatment based on severity classification.",
+    data: "Retinal scan images, patient medical history",
+    context: "Healthcare"
+  },
+  {
+    name: "Automated resume screening for hiring",
+    desc: "AI ranks job applicants by analyzing resumes and predicting fit, used to shortlist candidates before human review in the recruitment pipeline.",
+    data: "CVs, employment history, education records",
+    context: "Employment / HR"
+  },
+  {
+    name: "Internal support chatbot",
+    desc: "Conversational assistant answers employee questions about IT and HR policies using a knowledge base, clearly identified as an AI assistant.",
+    data: "Support ticket text, policy documents",
+    context: "Customer-facing chatbot or assistant"
+  }
+];
+
+function loadSample(i){
+  const s = samples[i];
+  document.getElementById('name').value = s.name;
+  document.getElementById('desc').value = s.desc;
+  document.getElementById('data').value = s.data;
+  document.getElementById('context').value = s.context;
+  runClassifier();
+}
+
+// Crosswalk lookup — mirrors /crosswalk/framework-crosswalk.md
+const crosswalk = {
+  Unacceptable: [
+    {fw:'G', ref:'GDPR Art. 5(2)', desc:'Immediate lawful-basis re-assessment; processing halt review'},
+    {fw:'N', ref:'NIST AI RMF GOVERN 1', desc:'Escalate to organizational AI policy exception review'},
+    {fw:'I', ref:'ISO/IEC 42001 A.2', desc:'AI Policy exception and escalation procedure'}
+  ],
+  High: [
+    {fw:'G', ref:'GDPR Art. 35', desc:'Data Protection Impact Assessment (DPIA) mandatory before deployment'},
+    {fw:'G', ref:'GDPR Art. 22', desc:'Automated-decision safeguards; right to human review'},
+    {fw:'N', ref:'NIST AI RMF GOVERN 1-6, MAP 1-5, MEASURE 1-4, MANAGE 1-4', desc:'Full lifecycle risk-management process required'},
+    {fw:'I', ref:'ISO/IEC 42001 A.5 (AISIA), A.6, A.7, A.10', desc:'Formal AI System Impact Assessment, lifecycle and data governance controls, vendor due diligence'}
+  ],
+  Limited: [
+    {fw:'G', ref:'GDPR Art. 13/14', desc:'Transparency notice disclosing AI involvement'},
+    {fw:'N', ref:'NIST AI RMF GOVERN 4, MAP 5.1', desc:'Transparency and documentation practices'},
+    {fw:'I', ref:'ISO/IEC 42001 A.8', desc:'Information for interested parties — AI use disclosure'}
+  ],
+  Minimal: [
+    {fw:'G', ref:'GDPR Art. 5/6', desc:'Standard lawful-basis check'},
+    {fw:'N', ref:'NIST AI RMF GOVERN 1', desc:'Baseline policy alignment only'},
+    {fw:'I', ref:'ISO/IEC 42001 A.2', desc:'Baseline AI policy alignment'}
+  ]
+};
+
+// Each trigger is either:
+//   { kw:[...] }              -> matches if ANY keyword/phrase is present
+//   { any:[...], and:[...] }  -> matches if ANY of `any` AND ANY of `and` are present (co-occurrence)
+// Co-occurrence rules exist because single fixed phrases are too brittle —
+// e.g. "emotion inference in a classroom" should trigger the same rule as
+// "emotion recognition in schools" even though the exact wording differs.
+
+const schoolWorkplaceContext = ['classroom','school','student','workplace','employee','office','university'];
+const publicAuthorityContext = ['citizen','public authority','government','public benefit','welfare','resident'];
+
+const unacceptableTriggers = [
+  {any:['scor'], and:publicAuthorityContext, reason:'social scoring of individuals by a public authority based on behavior'},
+  {kw:['manipulat','subliminal'], reason:'manipulative or subliminal technique designed to distort behavior'},
+  {kw:['real-time biometric','real time biometric','live facial recognition'], reason:'real-time remote biometric identification in a publicly accessible space'},
+  {any:['emotion','infer emotion','emotional state'], and:schoolWorkplaceContext, reason:'emotion inference in the workplace or an educational setting'},
+  {kw:['infer race','infer political','infer religion','infer sexual orientation','categorize by race','categorise by race'], reason:'biometric categorization inferring a protected characteristic'}
+];
+
+const highRiskTriggers = [
+  {kw:['hiring','recruit','resume','cv screening','promotion','termination','performance monitoring'], reason:'AI used as a decision or decision-support component in employment'},
+  {any:['employment','employee','workforce','staff'], and:['rank','score','scoring','decision','evaluat','monitor','review','promot','terminat','screen'], reason:'AI used as a decision or decision-support component in employment'},
+  {kw:['credit','loan','insurance eligib','benefits eligib','essential service'], reason:'AI determines access to an essential private or public service'},
+  {kw:['diagnos','triage','treatment recommend','clinical','patient','retinopathy','screening'], reason:'AI used in a healthcare diagnostic or treatment-support role'},
+  {kw:['law enforcement','migration','border control','policing'], reason:'AI used in law enforcement, migration, or border-control context'},
+  {kw:['admission','exam scoring','vocational training','student assessment'], reason:'AI used in education or vocational-training assessment'},
+  {kw:['critical infrastructure','power grid','water supply','traffic control'], reason:'AI used as a safety component of critical infrastructure'},
+  {kw:['justice','court','sentencing','democratic process','election'], reason:'AI used in administration of justice or democratic processes'}
+];
+
+const limitedRiskTriggers = [
+  {kw:['chatbot','virtual assistant','conversational assistant','support bot'], reason:'AI directly interacts with individuals who should know they are engaging with an AI system'},
+  {kw:['deepfake','synthetic media','generate image','generate video','generate audio','content generation'], reason:'AI generates or manipulates image, audio, or video content'},
+  {kw:['emotion recognition','biometric categorization'], reason:'emotion recognition or biometric categorization outside banned/high-risk contexts'}
+];
+
+function matchTriggers(text, triggers){
+  for(const t of triggers){
+    if(t.kw){
+      for(const kw of t.kw){ if(text.includes(kw)) return t.reason; }
+    } else if(t.any && t.and){
+      const hasAny = t.any.some(k => text.includes(k));
+      const hasAnd = t.and.some(k => text.includes(k));
+      if(hasAny && hasAnd) return t.reason;
+    }
+  }
+  return null;
+}
+
+function classify(name, desc, data, context){
+  const text = (name + ' ' + desc + ' ' + data + ' ' + context).toLowerCase();
+
+  let reason = matchTriggers(text, unacceptableTriggers);
+  if(reason) return {tier:'Unacceptable', reason};
+
+  reason = matchTriggers(text, highRiskTriggers);
+  if(reason) return {tier:'High', reason};
+
+  reason = matchTriggers(text, limitedRiskTriggers);
+  if(reason) return {tier:'Limited', reason};
+
+  return {tier:'Minimal', reason:'no Unacceptable, High, or Limited triggers were matched in the description provided'};
+}
+
+function runClassifier(){
+  const name = document.getElementById('name').value.trim();
+  const desc = document.getElementById('desc').value.trim();
+  const data = document.getElementById('data').value.trim();
+  const context = document.getElementById('context').value.trim();
+
+  if(!desc){
+    alert('Please enter a description of the AI use case before classifying.');
+    return;
+  }
+
+  const result = classify(name, desc, data, context);
+  const refs = crosswalk[result.tier];
+  runCount++;
+  document.getElementById('run-count').textContent = runCount + ' run' + (runCount>1?'s':'') + ' this session';
+
+  const trailHtml = refs.map(r => `
+    <div class="trail-row">
+      <div class="fw-badge ${r.fw}">${r.fw}</div>
+      <div class="trail-content">
+        <div class="ref">${r.ref}</div>
+        <div class="desc">${r.desc}</div>
+      </div>
+    </div>
+  `).join('');
+
+  const disclaimer = result.tier === 'Minimal'
+    ? `<div class="disclaimer">This is a rules-based first pass, not legal advice. If this use case evolves — new data types, new decision authority, new affected population — re-classify.</div>`
+    : `<div class="disclaimer">This is a rules-based first pass, not a substitute for legal review. Genuinely ambiguous cases should be escalated to human governance review rather than relying on this output alone.</div>`;
+
+  document.getElementById('output-body').innerHTML = `
+    <div class="verdict">
+      <div class="tier-badge tier-${result.tier}">${result.tier}</div>
+      <div class="verdict-text">
+        <h3>${name || 'Untitled use case'}</h3>
+        <p>Classified against EU AI Act risk taxonomy · docs/methodology/risk-classifier-methodology.md</p>
+      </div>
+    </div>
+    <div class="reasoning-box"><strong>Reasoning:</strong> This use case was classified as <strong>${result.tier}</strong> because it matches: ${result.reason}.</div>
+    <div class="section-label">Cross-framework citation trail</div>
+    <div class="trail">${trailHtml}</div>
+    ${disclaimer}
+  `;
+}
+</script>
+
+</body>
+</html>
