@@ -418,9 +418,11 @@ const highRiskTriggers = [
   {kw:['hiring','recruit','resume','cv screening','promotion','termination','performance monitoring'], reason:'AI used as a decision or decision-support component in employment'},
   {any:['employment','employee','workforce','staff'], and:['rank','score','scoring','decision','evaluat','monitor','review','promot','terminat','screen'], reason:'AI used as a decision or decision-support component in employment'},
   {kw:['credit','loan','insurance eligib','benefits eligib','essential service'], reason:'AI determines access to an essential private or public service'},
-  {kw:['diagnos','triage','treatment recommend','clinical','patient','retinopathy','screening'], reason:'AI used in a healthcare diagnostic or treatment-support role'},
+  {kw:['diagnos','triage','treatment recommend','clinical','patient','retinopathy'], reason:'AI used in a healthcare diagnostic or treatment-support role'},
+  {any:['screening'], and:['patient','clinical','medical','health','hospital','disease'], reason:'AI used in a healthcare diagnostic or treatment-support role'},
   {kw:['law enforcement','migration','border control','policing'], reason:'AI used in law enforcement, migration, or border-control context'},
   {kw:['admission','exam scoring','vocational training','student assessment'], reason:'AI used in education or vocational-training assessment'},
+  {any:['screening','suitability score'], and:['admission','applicant','university','college','student'], reason:'AI used in education or vocational-training assessment'},
   {kw:['critical infrastructure','power grid','water supply','traffic control'], reason:'AI used as a safety component of critical infrastructure'},
   {kw:['justice','court','sentencing','democratic process','election'], reason:'AI used in administration of justice or democratic processes'}
 ];
