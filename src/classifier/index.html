@@ -265,16 +265,134 @@
     color:var(--ink-faint);
     font-family:var(--mono);
   }
+
+  /* Tab bar */
+  .tabbar{
+    max-width:1240px;
+    margin:0 auto;
+    padding:0 32px;
+    display:flex;
+    gap:4px;
+    border-bottom:1px solid var(--line);
+    background:var(--panel);
+  }
+  .tab-btn{
+    background:transparent;
+    border:none;
+    border-bottom:2px solid transparent;
+    padding:14px 16px;
+    font-family:var(--sans);
+    font-size:13px;
+    font-weight:600;
+    color:var(--ink-faint);
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .tab-btn:hover{color:var(--ink-soft);}
+  .tab-btn.active{color:var(--accent); border-bottom-color:var(--accent);}
+  .tab-count{
+    font-family:var(--mono);
+    font-size:10px;
+    background:var(--accent-soft);
+    color:var(--accent);
+    padding:2px 7px;
+    border-radius:10px;
+  }
+  .tab-btn.active .tab-count{background:var(--accent); color:#fff;}
+  .tab-panel{display:none;}
+  .tab-panel.active{display:block;}
+
+  /* Register tables */
+  .register-wrap{
+    max-width:1240px;
+    margin:0 auto;
+    padding:24px 32px;
+  }
+  .register-head{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    margin-bottom:14px;
+  }
+  .register-head h2{font-size:16px; margin:0;}
+  .register-head p{font-size:12px; color:var(--ink-soft); margin:4px 0 0;}
+  table.register{
+    width:100%;
+    border-collapse:collapse;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:6px;
+    overflow:hidden;
+    font-size:12.5px;
+  }
+  table.register th{
+    text-align:left;
+    background:#F5F6F8;
+    padding:10px 12px;
+    font-size:10.5px;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    color:var(--ink-faint);
+    border-bottom:1px solid var(--line);
+    font-family:var(--mono);
+    font-weight:600;
+  }
+  table.register td{
+    padding:10px 12px;
+    border-bottom:1px solid var(--line);
+    color:var(--ink-soft);
+    vertical-align:top;
+  }
+  table.register tr:last-child td{border-bottom:none;}
+  table.register .id-cell{font-family:var(--mono); font-size:11.5px; color:var(--ink); white-space:nowrap;}
+  table.register select, table.register input[type=text]{
+    font-size:11.5px;
+    padding:5px 7px;
+    border:1px solid var(--line);
+    border-radius:3px;
+    width:100%;
+    font-family:var(--sans);
+  }
+  .sev-badge{
+    font-family:var(--mono);
+    font-size:10.5px;
+    font-weight:600;
+    padding:3px 8px;
+    border-radius:3px;
+    white-space:nowrap;
+  }
+  .sev-Critical{background:var(--unacceptable-bg); color:var(--unacceptable);}
+  .sev-High{background:var(--high-bg); color:var(--high);}
+  .sev-Medium{background:var(--limited-bg); color:var(--limited);}
+  .sev-Low{background:var(--minimal-bg); color:var(--minimal);}
+  .register-empty{
+    padding:48px 20px;
+    text-align:center;
+    color:var(--ink-faint);
+    font-size:13px;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:6px;
+  }
 </style>
 </head>
 <body>
 
 <div class="topbar">
   <span class="module">AI Governance Command Center</span>
-  <span class="brand">Risk Classifier</span>
+  <span class="brand">Risk Classifier &amp; Registers</span>
   <span class="tag">Module 01 / 05 · Rules-Based Engine</span>
 </div>
 
+<div class="tabbar">
+  <button class="tab-btn active" id="tab-classifier" onclick="showTab('classifier')">Classifier</button>
+  <button class="tab-btn" id="tab-assets" onclick="showTab('assets')">AI Asset Register <span class="tab-count" id="asset-count">0</span></button>
+  <button class="tab-btn" id="tab-risks" onclick="showTab('risks')">Risk Register <span class="tab-count" id="risk-count">0</span></button>
+</div>
+
+<div class="tab-panel active" id="panel-classifier">
 <div class="layout">
 
   <!-- INPUT PANEL -->
@@ -307,6 +425,16 @@
         <option>Other / general purpose</option>
       </select>
 
+      <label for="owner">Internal owner</label>
+      <input type="text" id="owner" placeholder="e.g. Admissions Dept, HR Operations">
+
+      <label for="deploystatus">Deployment status</label>
+      <select id="deploystatus">
+        <option>Piloting</option>
+        <option>Live</option>
+        <option>Retired</option>
+      </select>
+
       <button class="btn btn-primary" onclick="runClassifier()">Classify risk tier</button>
 
       <div style="margin-top:24px; border-top:1px solid var(--line); padding-top:16px;">
@@ -329,17 +457,155 @@
     <div id="output-body">
       <div class="empty-state">
         <div class="mark">Awaiting input</div>
-        <p>Submit a use case on the left, or load a reference case, to generate a risk tier with a full GDPR / NIST AI RMF / ISO 42001 citation trail.</p>
+        <p>Submit a use case on the left, or load a reference case, to generate a risk tier with a full GDPR / NIST AI RMF / ISO 42001 citation trail. Every run is automatically logged to the AI Asset Register and, where relevant, the Risk Register.</p>
       </div>
     </div>
   </div>
 
+</div>
+</div>
+
+<!-- ASSET REGISTER PANEL -->
+<div class="tab-panel" id="panel-assets">
+  <div class="register-wrap">
+    <div class="register-head">
+      <div>
+        <h2>AI Asset Register</h2>
+        <p>Auto-populated from every classification run this session. One row per AI system.</p>
+      </div>
+    </div>
+    <div id="asset-table-wrap"><div class="register-empty">No assets logged yet — run a classification to populate this register.</div></div>
+  </div>
+</div>
+
+<!-- RISK REGISTER PANEL -->
+<div class="tab-panel" id="panel-risks">
+  <div class="register-wrap">
+    <div class="register-head">
+      <div>
+        <h2>Risk Register</h2>
+        <p>One entry per identified risk, linked to its asset, with severity/likelihood and treatment status. Edit mitigation and status inline.</p>
+      </div>
+    </div>
+    <div id="risk-table-wrap"><div class="register-empty">No risks logged yet — run a classification to populate this register.</div></div>
+  </div>
 </div>
 
 <footer>ai-governance-command-center / src / classifier — rules engine implements docs/methodology/risk-classifier-methodology.md</footer>
 
 <script>
 let runCount = 0;
+let assetSeq = 0;
+let riskSeq = 0;
+const assetRegister = [];  // {id, name, owner, tier, deployStatus, dateLogged}
+const riskRegister = [];   // {id, assetId, description, frameworkRef, severity, likelihood, mitigation, status, owner}
+
+function showTab(tab){
+  ['classifier','assets','risks'].forEach(t => {
+    document.getElementById('panel-'+t).classList.toggle('active', t===tab);
+    document.getElementById('tab-'+t).classList.toggle('active', t===tab);
+  });
+}
+
+const severityMap = {
+  Unacceptable: {severity:'Critical', likelihood:'High'},
+  High: {severity:'High', likelihood:'Medium'},
+  Limited: {severity:'Medium', likelihood:'Low'},
+  Minimal: {severity:'Low', likelihood:'Low'}
+};
+
+function pad(n){ return String(n).padStart(3,'0'); }
+
+function logToRegisters(name, owner, deployStatus, tier, reason, refs){
+  assetSeq++;
+  const assetId = 'AI-2026-' + pad(assetSeq);
+  assetRegister.push({
+    id: assetId,
+    name: name || 'Untitled use case',
+    owner: owner || '(unassigned)',
+    tier: tier,
+    deployStatus: deployStatus || 'Piloting',
+    dateLogged: new Date().toISOString().slice(0,10)
+  });
+
+  // Only Unacceptable/High/Limited generate a risk-register entry —
+  // Minimal-tier use cases are logged as assets but don't warrant a tracked risk.
+  if(tier !== 'Minimal'){
+    riskSeq++;
+    const sev = severityMap[tier];
+    riskRegister.push({
+      id: 'R-' + pad(riskSeq),
+      assetId: assetId,
+      description: reason,
+      frameworkRef: refs[0] ? refs[0].ref : '—',
+      severity: sev.severity,
+      likelihood: sev.likelihood,
+      mitigation: '',
+      status: 'Open',
+      owner: owner || '(unassigned)'
+    });
+  }
+
+  renderRegisters();
+}
+
+function renderRegisters(){
+  document.getElementById('asset-count').textContent = assetRegister.length;
+  document.getElementById('risk-count').textContent = riskRegister.length;
+
+  const assetWrap = document.getElementById('asset-table-wrap');
+  if(assetRegister.length === 0){
+    assetWrap.innerHTML = '<div class="register-empty">No assets logged yet — run a classification to populate this register.</div>';
+  } else {
+    assetWrap.innerHTML = `
+      <table class="register">
+        <tr><th>Asset ID</th><th>System Name</th><th>Owner</th><th>Risk Tier</th><th>Deployment Status</th><th>Last Logged</th></tr>
+        ${assetRegister.map(a => `
+          <tr>
+            <td class="id-cell">${a.id}</td>
+            <td>${a.name}</td>
+            <td>${a.owner}</td>
+            <td><span class="tier-badge tier-${a.tier}" style="padding:3px 8px; font-size:10.5px;">${a.tier}</span></td>
+            <td>${a.deployStatus}</td>
+            <td>${a.dateLogged}</td>
+          </tr>
+        `).join('')}
+      </table>`;
+  }
+
+  const riskWrap = document.getElementById('risk-table-wrap');
+  if(riskRegister.length === 0){
+    riskWrap.innerHTML = '<div class="register-empty">No risks logged yet — run a classification to populate this register.</div>';
+  } else {
+    riskWrap.innerHTML = `
+      <table class="register">
+        <tr><th>Risk ID</th><th>Linked Asset</th><th>Risk Description</th><th>Framework Ref.</th><th>Severity</th><th>Likelihood</th><th>Mitigation</th><th>Status</th><th>Owner</th></tr>
+        ${riskRegister.map((r, i) => `
+          <tr>
+            <td class="id-cell">${r.id}</td>
+            <td class="id-cell">${r.assetId}</td>
+            <td>${r.description}</td>
+            <td class="id-cell">${r.frameworkRef}</td>
+            <td><span class="sev-badge sev-${r.severity}">${r.severity}</span></td>
+            <td><span class="sev-badge sev-${r.likelihood}">${r.likelihood}</span></td>
+            <td><input type="text" value="${r.mitigation}" placeholder="Add mitigation…" onchange="updateRisk(${i},'mitigation',this.value)"></td>
+            <td>
+              <select onchange="updateRisk(${i},'status',this.value)">
+                <option ${r.status==='Open'?'selected':''}>Open</option>
+                <option ${r.status==='Mitigated'?'selected':''}>Mitigated</option>
+                <option ${r.status==='Accepted'?'selected':''}>Accepted</option>
+              </select>
+            </td>
+            <td>${r.owner}</td>
+          </tr>
+        `).join('')}
+      </table>`;
+  }
+}
+
+function updateRisk(index, field, value){
+  riskRegister[index][field] = value;
+}
 
 const samples = [
   {
@@ -466,6 +732,8 @@ function runClassifier(){
   const desc = document.getElementById('desc').value.trim();
   const data = document.getElementById('data').value.trim();
   const context = document.getElementById('context').value.trim();
+  const owner = document.getElementById('owner').value.trim();
+  const deployStatus = document.getElementById('deploystatus').value;
 
   if(!desc){
     alert('Please enter a description of the AI use case before classifying.');
@@ -476,6 +744,8 @@ function runClassifier(){
   const refs = crosswalk[result.tier];
   runCount++;
   document.getElementById('run-count').textContent = runCount + ' run' + (runCount>1?'s':'') + ' this session';
+
+  logToRegisters(name, owner, deployStatus, result.tier, result.reason, refs);
 
   const trailHtml = refs.map(r => `
     <div class="trail-row">
