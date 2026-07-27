@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Governance Command Center — Incident Log</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F7F8FA; --panel:#FFFFFF; --ink:#151B26; --ink-soft:#4B5565; --ink-faint:#8A93A3; --line:#E3E7ED;
+    --navy:#111A2E; --navy-soft:#1D2A44; --accent:#2A5CDB; --accent-soft:#EAF0FD;
+    --critical:#B3261E; --critical-bg:#FCEBEA; --high:#C2560C; --high-bg:#FDF0E4;
+    --medium:#9A7B00; --medium-bg:#FBF3D9; --low:#1E7A46; --low-bg:#E6F4EC;
+    --mono:'IBM Plex Mono', monospace; --sans:'IBM Plex Sans', -apple-system, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); font-family:var(--sans); color:var(--ink); -webkit-font-smoothing:antialiased;}
+
+  .topbar{background:var(--navy); color:#fff; padding:18px 32px; display:flex; align-items:baseline; gap:14px; border-bottom:3px solid var(--accent);}
+  .topbar .brand{font-size:14px; font-weight:600; letter-spacing:0.02em; color:#AEB9CF;}
+  .topbar .module{font-size:18px; font-weight:600;}
+  .topbar .tag{margin-left:auto; font-family:var(--mono); font-size:11px; color:#AEB9CF; letter-spacing:0.04em; text-transform:uppercase;}
+
+  .tabbar{max-width:1280px; margin:0 auto; padding:0 32px; display:flex; gap:4px; border-bottom:1px solid var(--line); background:var(--panel);}
+  .tab-btn{background:transparent; border:none; border-bottom:2px solid transparent; padding:14px 16px; font-family:var(--sans); font-size:13px; font-weight:600; color:var(--ink-faint); cursor:pointer; display:flex; align-items:center; gap:8px;}
+  .tab-btn:hover{color:var(--ink-soft);}
+  .tab-btn.active{color:var(--accent); border-bottom-color:var(--accent);}
+  .tab-count{font-family:var(--mono); font-size:10px; background:var(--accent-soft); color:var(--accent); padding:2px 7px; border-radius:10px;}
+  .tab-btn.active .tab-count{background:var(--accent); color:#fff;}
+  .tab-panel{display:none;}
+  .tab-panel.active{display:block;}
+
+  .layout{max-width:1280px; margin:0 auto; padding:32px; display:grid; grid-template-columns:440px 1fr; gap:28px; align-items:start;}
+  @media (max-width: 960px){ .layout{grid-template-columns:1fr;} }
+
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:6px;}
+  .card-head{padding:16px 20px; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between;}
+  .card-head h2{margin:0; font-size:14px; font-weight:600;}
+  .card-head .count{font-family:var(--mono); font-size:11px; color:var(--ink-faint);}
+  .card-body{padding:20px;}
+
+  label{display:block; font-size:12px; font-weight:600; color:var(--ink-soft); margin-bottom:6px; margin-top:16px;}
+  label:first-child{margin-top:0;}
+  input[type=text], input[type=date], textarea, select{width:100%; padding:9px 11px; border:1px solid var(--line); border-radius:4px; font-family:var(--sans); font-size:13px; color:var(--ink); background:#fff;}
+  textarea{resize:vertical; min-height:80px; line-height:1.5;}
+  input:focus, textarea:focus, select:focus{outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft);}
+  .row-2{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+
+  .btn{display:inline-flex; align-items:center; gap:8px; padding:11px 18px; border-radius:4px; border:none; font-family:var(--sans); font-size:13px; font-weight:600; cursor:pointer;}
+  .btn-primary{background:var(--navy); color:#fff; width:100%; justify-content:center; margin-top:20px;}
+  .btn-primary:hover{background:var(--navy-soft);}
+
+  .empty-state{padding:64px 32px; text-align:center; color:var(--ink-faint);}
+  .empty-state .mark{font-family:var(--mono); font-size:11px; letter-spacing:0.08em; text-transform:uppercase; margin-bottom:10px;}
+  .empty-state p{font-size:13px; max-width:380px; margin:8px auto 0; line-height:1.6;}
+
+  .verdict{display:flex; align-items:center; gap:16px; padding:22px 20px; border-bottom:1px solid var(--line);}
+  .sev-badge{font-family:var(--mono); font-size:12px; font-weight:600; letter-spacing:0.03em; text-transform:uppercase; padding:8px 14px; border-radius:4px; white-space:nowrap;}
+  .badge-Critical{color:var(--critical); background:var(--critical-bg);}
+  .badge-High{color:var(--high); background:var(--high-bg);}
+  .badge-Medium{color:var(--medium); background:var(--medium-bg);}
+  .badge-Low{color:var(--low); background:var(--low-bg);}
+  .verdict-text h3{margin:0 0 4px; font-size:15px;}
+  .verdict-text p{margin:0; font-size:12px; color:var(--ink-soft); line-height:1.5;}
+
+  .timer-row{display:flex; gap:16px; padding:16px 20px; border-bottom:1px solid var(--line);}
+  .timer-box{flex:1; background:#FAFBFC; border:1px solid var(--line); border-radius:4px; padding:12px 14px;}
+  .timer-box .label{font-family:var(--mono); font-size:10px; letter-spacing:0.04em; text-transform:uppercase; color:var(--ink-faint); margin-bottom:6px;}
+  .timer-box .value{font-size:15px; font-weight:700;}
+  .timer-box .value.ok{color:var(--low);}
+  .timer-box .value.warn{color:var(--high);}
+  .timer-box .value.bad{color:var(--critical);}
+
+  .section-label{font-family:var(--mono); font-size:10.5px; letter-spacing:0.08em; text-transform:uppercase; color:var(--ink-faint); padding:16px 20px 8px;}
+  .trail{padding:0 20px 20px; display:flex; flex-direction:column; gap:8px;}
+  .trail-row{display:flex; gap:12px; align-items:flex-start; padding:10px 12px; background:#FAFBFC; border:1px solid var(--line); border-radius:4px;}
+  .fw-badge{font-family:var(--mono); font-size:11px; font-weight:700; width:26px; height:26px; min-width:26px; border-radius:4px; display:flex; align-items:center; justify-content:center; color:#fff;}
+  .fw-badge.G{background:#7C3AED;} .fw-badge.N{background:#0891B2;} .fw-badge.I{background:#1D4ED8;}
+  .trail-content .ref{font-family:var(--mono); font-size:12px; font-weight:600; color:var(--ink);}
+  .trail-content .desc{font-size:12px; color:var(--ink-soft); margin-top:2px; line-height:1.45;}
+  .disclaimer{margin:0 20px 20px; padding:12px 14px; background:var(--medium-bg); border-radius:4px; font-size:11.5px; color:#6B5900; line-height:1.5;}
+
+  .register-wrap{max-width:1280px; margin:0 auto; padding:24px 32px;}
+  .register-head{margin-bottom:14px;}
+  .register-head h2{font-size:16px; margin:0;}
+  .register-head p{font-size:12px; color:var(--ink-soft); margin:4px 0 0;}
+  table.register{width:100%; border-collapse:collapse; background:var(--panel); border:1px solid var(--line); border-radius:6px; overflow:hidden; font-size:12.5px;}
+  table.register th{text-align:left; background:#F5F6F8; padding:10px 12px; font-size:10.5px; letter-spacing:0.04em; text-transform:uppercase; color:var(--ink-faint); border-bottom:1px solid var(--line); font-family:var(--mono); font-weight:600;}
+  table.register td{padding:10px 12px; border-bottom:1px solid var(--line); color:var(--ink-soft); vertical-align:top;}
+  table.register tr:last-child td{border-bottom:none;}
+  table.register .id-cell{font-family:var(--mono); font-size:11.5px; color:var(--ink); white-space:nowrap;}
+  table.register select, table.register input[type=text]{font-size:11.5px; padding:5px 7px; border:1px solid var(--line); border-radius:3px; width:100%; font-family:var(--sans);}
+  .register-empty{padding:48px 20px; text-align:center; color:var(--ink-faint); font-size:13px; background:var(--panel); border:1px solid var(--line); border-radius:6px;}
+
+  footer{max-width:1280px; margin:0 auto; padding:8px 32px 40px; font-size:11px; color:var(--ink-faint); font-family:var(--mono);}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <span class="module">AI Governance Command Center</span>
+  <span class="brand">Incident Log</span>
+  <span class="tag">Module 04 / 05 · Severity Triage + Breach-Clock Tracking</span>
+</div>
+
+<div class="tabbar">
+  <button class="tab-btn active" id="tab-report" onclick="showTab('report')">Report Incident</button>
+  <button class="tab-btn" id="tab-log" onclick="showTab('log')">Incident Register <span class="tab-count" id="incident-count">0</span></button>
+</div>
+
+<div class="tab-panel active" id="panel-report">
+<div class="layout">
+
+  <!-- INTAKE -->
+  <div class="card">
+    <div class="card-head"><h2>Incident Intake</h2></div>
+    <div class="card-body">
+      <label for="iname">AI system involved</label>
+      <input type="text" id="iname" placeholder="e.g. Essay evaluator v2">
+
+      <label for="iassetid">Linked Asset ID (optional)</label>
+      <input type="text" id="iassetid" placeholder="e.g. AI-2026-004">
+
+      <label for="idesc">What happened?</label>
+      <textarea id="idesc" placeholder="Describe the incident: what the system did, who was affected, and how it was discovered."></textarea>
+
+      <div class="row-2">
+        <div>
+          <label for="idate">Date discovered</label>
+          <input type="date" id="idate">
+        </div>
+        <div>
+          <label for="iowner">Reported by / owner</label>
+          <input type="text" id="iowner" placeholder="e.g. Model Risk Team">
+        </div>
+      </div>
+
+      <label for="iinvolves">Does this involve personal data?</label>
+      <select id="iinvolves">
+        <option value="no">No personal data involved</option>
+        <option value="yes">Yes, personal data was involved</option>
+        <option value="unknown">Unknown / needs investigation</option>
+      </select>
+
+      <label for="iimpact">What kind of impact occurred?</label>
+      <select id="iimpact">
+        <option value="none">No individual impact — technical/performance issue only</option>
+        <option value="incorrect_output">Incorrect or unreliable output delivered to a user</option>
+        <option value="decision_impact">Output influenced a decision affecting an individual</option>
+        <option value="rights_denied">Output led to denial of a service, benefit, or opportunity</option>
+        <option value="discriminatory">Disparate or discriminatory impact on a protected group identified</option>
+        <option value="data_exposure">Personal data was exposed, leaked, or improperly accessed</option>
+      </select>
+
+      <button class="btn btn-primary" onclick="logIncident()">Log incident</button>
+    </div>
+  </div>
+
+  <!-- OUTPUT -->
+  <div class="card">
+    <div class="card-head"><h2>Triage Result</h2><span class="count" id="irun-count">no incidents yet</span></div>
+    <div id="ioutput-body">
+      <div class="empty-state">
+        <div class="mark">Awaiting input</div>
+        <p>Describe the incident and select its impact type to get an automatic severity rating, breach-notification clock (if personal data is involved), and citation trail. Every logged incident is added to the Incident Register.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- INCIDENT REGISTER -->
+<div class="tab-panel" id="panel-log">
+  <div class="register-wrap">
+    <div class="register-head">
+      <h2>Incident Register</h2>
+      <p>One row per logged incident this session. Update status inline as incidents are investigated and closed.</p>
+    </div>
+    <div id="incident-table-wrap"><div class="register-empty">No incidents logged yet.</div></div>
+  </div>
+</div>
+
+<footer>ai-governance-command-center / src / incident-log — severity triage engine mapped to ISO 42001 clauses (Day 3)</footer>
+
+<script>
+let irunCount = 0;
+let incidentSeq = 0;
+const incidentRegister = [];
+
+function showTab(tab){
+  ['report','log'].forEach(t => {
+    document.getElementById('panel-'+t).classList.toggle('active', t===tab);
+    document.getElementById('tab-'+t).classList.toggle('active', t===tab);
+  });
+}
+
+function pad(n){ return String(n).padStart(3,'0'); }
+
+const impactSeverity = {
+  none: 'Low',
+  incorrect_output: 'Medium',
+  decision_impact: 'High',
+  rights_denied: 'Critical',
+  discriminatory: 'Critical',
+  data_exposure: 'High'
+};
+
+const severityOrder = ['Low','Medium','High','Critical'];
+
+function escalate(sev){
+  const idx = severityOrder.indexOf(sev);
+  return severityOrder[Math.min(idx + 1, severityOrder.length - 1)];
+}
+
+function calcSeverity(impact, involvesPersonalData){
+  let sev = impactSeverity[impact] || 'Low';
+  if(involvesPersonalData === 'yes' && sev !== 'Critical'){
+    sev = escalate(sev);
+  }
+  return sev;
+}
+
+const severityCitations = {
+  Critical: [
+    {fw:'I', ref:'ISO/IEC 42001 Clause 10.2', desc:'Nonconformity and corrective action — immediate escalation and root-cause analysis required.'},
+    {fw:'N', ref:'NIST AI RMF MANAGE 2, MANAGE 4', desc:'Highest-priority risk treatment; incident response plan should activate in full.'},
+    {fw:'G', ref:'GDPR Art. 33/34 (if personal data involved)', desc:'72-hour supervisory authority notification clock applies if personal data was exposed; individual notification may also be required.'}
+  ],
+  High: [
+    {fw:'I', ref:'ISO/IEC 42001 Clause 10.1/10.2', desc:'Nonconformity logged; corrective action plan required with defined owner and timeline.'},
+    {fw:'N', ref:'NIST AI RMF MANAGE 2', desc:'Risk treatment plan required before the affected system continues normal operation.'},
+    {fw:'G', ref:'GDPR Art. 33/34 (if personal data involved)', desc:'Assess breach-notification obligations if personal data was involved.'}
+  ],
+  Medium: [
+    {fw:'I', ref:'ISO/IEC 42001 Clause 10.1', desc:'Log as a minor nonconformity; track resolution at the next scheduled management review.'},
+    {fw:'N', ref:'NIST AI RMF MANAGE 4', desc:'Monitor for recurrence; no immediate escalation required unless pattern emerges.'}
+  ],
+  Low: [
+    {fw:'I', ref:'ISO/IEC 42001 Clause 9.1', desc:'Record for monitoring and performance-evaluation trend data — no corrective action required.'},
+    {fw:'N', ref:'NIST AI RMF MEASURE 4', desc:'Contributes to ongoing performance monitoring; no separate treatment plan needed.'}
+  ]
+};
+
+function logIncident(){
+  const iname = document.getElementById('iname').value.trim();
+  const iassetid = document.getElementById('iassetid').value.trim();
+  const idesc = document.getElementById('idesc').value.trim();
+  const idate = document.getElementById('idate').value;
+  const iowner = document.getElementById('iowner').value.trim();
+  const involves = document.getElementById('iinvolves').value;
+  const impact = document.getElementById('iimpact').value;
+
+  if(!iname || !idesc){
+    alert('Please enter the AI system name and a description before logging the incident.');
+    return;
+  }
+
+  const severity = calcSeverity(impact, involves);
+  const discoveredDate = idate ? new Date(idate) : new Date();
+
+  irunCount++;
+  document.getElementById('irun-count').textContent = irunCount + ' incident' + (irunCount>1?'s':'') + ' logged this session';
+
+  incidentSeq++;
+  const incidentId = 'INC-2026-' + pad(incidentSeq);
+  incidentRegister.push({
+    id: incidentId,
+    system: iname,
+    assetId: iassetid || '—',
+    severity: severity,
+    involvesPersonalData: involves,
+    impact: impact,
+    owner: iowner || '(unassigned)',
+    discoveredDate: discoveredDate.toISOString().slice(0,10),
+    status: 'Open'
+  });
+  renderIncidentRegister();
+
+  let breachClockHtml = '';
+  if(involves === 'yes'){
+    const deadline = new Date(discoveredDate.getTime() + 72*60*60*1000);
+    const now = new Date();
+    const hoursRemaining = Math.round((deadline - now) / (1000*60*60));
+    const clockClass = hoursRemaining < 0 ? 'bad' : (hoursRemaining < 24 ? 'warn' : 'ok');
+    breachClockHtml = `
+      <div class="timer-row">
+        <div class="timer-box">
+          <div class="label">GDPR Art. 33 Notification Deadline</div>
+          <div class="value ${clockClass}">${deadline.toLocaleString()}</div>
+        </div>
+        <div class="timer-box">
+          <div class="label">Hours Remaining (from discovery date)</div>
+          <div class="value ${clockClass}">${hoursRemaining < 0 ? 'Deadline passed' : hoursRemaining + ' hrs'}</div>
+        </div>
+      </div>`;
+  } else if(involves === 'unknown'){
+    breachClockHtml = `
+      <div class="timer-row">
+        <div class="timer-box">
+          <div class="label">GDPR Art. 33 Notification Clock</div>
+          <div class="value warn">Not started — confirm personal-data involvement first</div>
+        </div>
+      </div>`;
+  }
+
+  const refs = severityCitations[severity];
+  const trailHtml = refs.map(r => `
+    <div class="trail-row">
+      <div class="fw-badge ${r.fw}">${r.fw}</div>
+      <div class="trail-content"><div class="ref">${r.ref}</div><div class="desc">${r.desc}</div></div>
+    </div>
+  `).join('');
+
+  document.getElementById('ioutput-body').innerHTML = `
+    <div class="verdict">
+      <div class="sev-badge badge-${severity}">${severity}</div>
+      <div class="verdict-text">
+        <h3>${incidentId} — ${iname}</h3>
+        <p>${iassetid ? 'Linked to ' + iassetid + ' · ' : ''}Logged ${new Date().toLocaleString()}</p>
+      </div>
+    </div>
+    ${breachClockHtml}
+    <div class="section-label">Cross-framework citation trail</div>
+    <div class="trail">${trailHtml}</div>
+    <div class="disclaimer">Severity is derived from impact type and personal-data involvement as entered. This is a triage aid, not a legal determination — confirmed personal-data breaches must be assessed by whoever holds data-protection accountability in the organization, on the actual 72-hour clock from confirmed awareness, not from this tool's estimate.</div>
+  `;
+}
+
+function renderIncidentRegister(){
+  document.getElementById('incident-count').textContent = incidentRegister.length;
+  const wrap = document.getElementById('incident-table-wrap');
+  if(incidentRegister.length === 0){
+    wrap.innerHTML = '<div class="register-empty">No incidents logged yet.</div>';
+    return;
+  }
+  wrap.innerHTML = `
+    <table class="register">
+      <tr><th>Incident ID</th><th>System</th><th>Asset ID</th><th>Severity</th><th>Personal Data</th><th>Owner</th><th>Discovered</th><th>Status</th></tr>
+      ${incidentRegister.slice().reverse().map((inc, revIdx) => {
+        const i = incidentRegister.length - 1 - revIdx;
+        return `
+        <tr>
+          <td class="id-cell">${inc.id}</td>
+          <td>${inc.system}</td>
+          <td class="id-cell">${inc.assetId}</td>
+          <td><span class="sev-badge badge-${inc.severity}" style="padding:4px 10px; font-size:10.5px;">${inc.severity}</span></td>
+          <td>${inc.involvesPersonalData}</td>
+          <td>${inc.owner}</td>
+          <td class="id-cell">${inc.discoveredDate}</td>
+          <td>
+            <select onchange="updateIncidentStatus(${i}, this.value)">
+              <option ${inc.status==='Open'?'selected':''}>Open</option>
+              <option ${inc.status==='Investigating'?'selected':''}>Investigating</option>
+              <option ${inc.status==='Mitigated'?'selected':''}>Mitigated</option>
+              <option ${inc.status==='Closed'?'selected':''}>Closed</option>
+            </select>
+          </td>
+        </tr>`;
+      }).join('')}
+    </table>`;
+}
+
+function updateIncidentStatus(index, value){
+  incidentRegister[index].status = value;
+}
+</script>
+
+</body>
+</html>
