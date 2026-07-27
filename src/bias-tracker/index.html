@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Governance Command Center — Bias &amp; Explainability Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F7F8FA; --panel:#FFFFFF; --ink:#151B26; --ink-soft:#4B5565; --ink-faint:#8A93A3; --line:#E3E7ED;
+    --navy:#111A2E; --navy-soft:#1D2A44; --accent:#2A5CDB; --accent-soft:#EAF0FD;
+    --critical:#B3261E; --critical-bg:#FCEBEA; --high:#C2560C; --high-bg:#FDF0E4;
+    --medium:#9A7B00; --medium-bg:#FBF3D9; --low:#1E7A46; --low-bg:#E6F4EC;
+    --mono:'IBM Plex Mono', monospace; --sans:'IBM Plex Sans', -apple-system, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); font-family:var(--sans); color:var(--ink); -webkit-font-smoothing:antialiased;}
+
+  .topbar{background:var(--navy); color:#fff; padding:18px 32px; display:flex; align-items:baseline; gap:14px; border-bottom:3px solid var(--accent);}
+  .topbar .brand{font-size:14px; font-weight:600; letter-spacing:0.02em; color:#AEB9CF;}
+  .topbar .module{font-size:18px; font-weight:600;}
+  .topbar .tag{margin-left:auto; font-family:var(--mono); font-size:11px; color:#AEB9CF; letter-spacing:0.04em; text-transform:uppercase;}
+
+  .tabbar{max-width:1280px; margin:0 auto; padding:0 32px; display:flex; gap:4px; border-bottom:1px solid var(--line); background:var(--panel);}
+  .tab-btn{background:transparent; border:none; border-bottom:2px solid transparent; padding:14px 16px; font-family:var(--sans); font-size:13px; font-weight:600; color:var(--ink-faint); cursor:pointer; display:flex; align-items:center; gap:8px;}
+  .tab-btn:hover{color:var(--ink-soft);}
+  .tab-btn.active{color:var(--accent); border-bottom-color:var(--accent);}
+  .tab-count{font-family:var(--mono); font-size:10px; background:var(--accent-soft); color:var(--accent); padding:2px 7px; border-radius:10px;}
+  .tab-btn.active .tab-count{background:var(--accent); color:#fff;}
+  .tab-panel{display:none;}
+  .tab-panel.active{display:block;}
+
+  .layout{max-width:1280px; margin:0 auto; padding:32px; display:grid; grid-template-columns:460px 1fr; gap:28px; align-items:start;}
+  @media (max-width: 980px){ .layout{grid-template-columns:1fr;} }
+
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:6px;}
+  .card-head{padding:16px 20px; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between;}
+  .card-head h2{margin:0; font-size:14px; font-weight:600;}
+  .card-head .count{font-family:var(--mono); font-size:11px; color:var(--ink-faint);}
+  .card-body{padding:20px;}
+
+  label{display:block; font-size:12px; font-weight:600; color:var(--ink-soft); margin-bottom:6px; margin-top:16px;}
+  label:first-child{margin-top:0;}
+  input[type=text], textarea, select{width:100%; padding:9px 11px; border:1px solid var(--line); border-radius:4px; font-family:var(--sans); font-size:13px; color:var(--ink); background:#fff;}
+  textarea{resize:vertical; min-height:56px; line-height:1.5;}
+  input:focus, textarea:focus, select:focus{outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft);}
+
+  .btn{display:inline-flex; align-items:center; gap:8px; padding:11px 18px; border-radius:4px; border:none; font-family:var(--sans); font-size:13px; font-weight:600; cursor:pointer;}
+  .btn-primary{background:var(--navy); color:#fff; width:100%; justify-content:center; margin-top:20px;}
+  .btn-primary:hover{background:var(--navy-soft);}
+
+  .category-block{margin-top:20px; padding-top:16px; border-top:1px solid var(--line);}
+  .category-block:first-of-type{margin-top:16px;}
+  .category-title{font-family:var(--mono); font-size:11px; letter-spacing:0.04em; text-transform:uppercase; color:var(--accent); margin-bottom:10px;}
+  .check-item{display:grid; grid-template-columns:1fr 130px; gap:8px; align-items:start; margin-bottom:10px; padding-bottom:10px; border-bottom:1px dashed var(--line);}
+  .check-item:last-child{border-bottom:none; margin-bottom:0; padding-bottom:0;}
+  .check-item .item-label{font-size:12px; color:var(--ink); line-height:1.4; padding-top:8px;}
+  .check-item select{font-size:11.5px; padding:7px 8px;}
+
+  .empty-state{padding:64px 32px; text-align:center; color:var(--ink-faint);}
+  .empty-state .mark{font-family:var(--mono); font-size:11px; letter-spacing:0.08em; text-transform:uppercase; margin-bottom:10px;}
+  .empty-state p{font-size:13px; max-width:380px; margin:8px auto 0; line-height:1.6;}
+
+  .verdict{display:flex; align-items:center; gap:20px; padding:24px 20px; border-bottom:1px solid var(--line);}
+  .score-ring{width:76px; height:76px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-direction:column; font-family:var(--mono); flex-shrink:0; border:4px solid var(--line);}
+  .score-ring .num{font-size:20px; font-weight:700; line-height:1;}
+  .score-ring .denom{font-size:9px; color:var(--ink-faint);}
+  .band-Critical{border-color:var(--critical); color:var(--critical);}
+  .band-High{border-color:var(--high); color:var(--high);}
+  .band-Medium{border-color:var(--medium); color:var(--medium);}
+  .band-Low{border-color:var(--low); color:var(--low);}
+  .verdict-text h3{margin:0 0 4px; font-size:15px;}
+  .verdict-text p{margin:0; font-size:12px; color:var(--ink-soft); line-height:1.5;}
+
+  .subscore-row{display:flex; gap:16px; padding:16px 20px; border-bottom:1px solid var(--line);}
+  .subscore{flex:1; background:#FAFBFC; border:1px solid var(--line); border-radius:4px; padding:12px 14px;}
+  .subscore .label{font-family:var(--mono); font-size:10px; letter-spacing:0.04em; text-transform:uppercase; color:var(--ink-faint); margin-bottom:6px;}
+  .subscore .value{font-size:20px; font-weight:700;}
+  .subscore .value.ok{color:var(--low);}
+  .subscore .value.warn{color:var(--high);}
+  .subscore .value.bad{color:var(--critical);}
+
+  .section-label{font-family:var(--mono); font-size:10.5px; letter-spacing:0.08em; text-transform:uppercase; color:var(--ink-faint); padding:16px 20px 8px;}
+  .flags{padding:0 20px 12px; display:flex; flex-direction:column; gap:8px;}
+  .flag-row{display:flex; gap:10px; padding:10px 12px; background:var(--critical-bg); border:1px solid #F3D3D0; border-radius:4px; font-size:12px; color:#7A1B15; line-height:1.5;}
+  .flag-row.medium{background:var(--medium-bg); border-color:#F0E1A0; color:#6B5900;}
+  .no-flags{margin:0 20px 12px; padding:10px 12px; background:var(--low-bg); border:1px solid #C9E8D5; border-radius:4px; font-size:12px; color:#155C36;}
+
+  .trail{padding:0 20px 20px; display:flex; flex-direction:column; gap:8px;}
+  .trail-row{display:flex; gap:12px; align-items:flex-start; padding:10px 12px; background:#FAFBFC; border:1px solid var(--line); border-radius:4px;}
+  .fw-badge{font-family:var(--mono); font-size:11px; font-weight:700; width:26px; height:26px; min-width:26px; border-radius:4px; display:flex; align-items:center; justify-content:center; color:#fff;}
+  .fw-badge.G{background:#7C3AED;} .fw-badge.N{background:#0891B2;} .fw-badge.I{background:#1D4ED8;}
+  .trail-content .ref{font-family:var(--mono); font-size:12px; font-weight:600; color:var(--ink);}
+  .trail-content .desc{font-size:12px; color:var(--ink-soft); margin-top:2px; line-height:1.45;}
+
+  .disclaimer{margin:0 20px 20px; padding:12px 14px; background:var(--medium-bg); border-radius:4px; font-size:11.5px; color:#6B5900; line-height:1.5;}
+
+  .register-wrap{max-width:1280px; margin:0 auto; padding:24px 32px;}
+  .register-head{margin-bottom:14px;}
+  .register-head h2{font-size:16px; margin:0;}
+  .register-head p{font-size:12px; color:var(--ink-soft); margin:4px 0 0;}
+  table.register{width:100%; border-collapse:collapse; background:var(--panel); border:1px solid var(--line); border-radius:6px; overflow:hidden; font-size:12.5px;}
+  table.register th{text-align:left; background:#F5F6F8; padding:10px 12px; font-size:10.5px; letter-spacing:0.04em; text-transform:uppercase; color:var(--ink-faint); border-bottom:1px solid var(--line); font-family:var(--mono); font-weight:600;}
+  table.register td{padding:10px 12px; border-bottom:1px solid var(--line); color:var(--ink-soft); vertical-align:top;}
+  table.register tr:last-child td{border-bottom:none;}
+  table.register .id-cell{font-family:var(--mono); font-size:11.5px; color:var(--ink); white-space:nowrap;}
+  .register-empty{padding:48px 20px; text-align:center; color:var(--ink-faint); font-size:13px; background:var(--panel); border:1px solid var(--line); border-radius:6px;}
+  .band-badge{font-family:var(--mono); font-size:11px; font-weight:600; letter-spacing:0.03em; text-transform:uppercase; padding:4px 10px; border-radius:4px; display:inline-block;}
+  .badge-Critical{color:var(--critical); background:var(--critical-bg);}
+  .badge-High{color:var(--high); background:var(--high-bg);}
+  .badge-Medium{color:var(--medium); background:var(--medium-bg);}
+  .badge-Low{color:var(--low); background:var(--low-bg);}
+
+  footer{max-width:1280px; margin:0 auto; padding:8px 32px 40px; font-size:11px; color:var(--ink-faint); font-family:var(--mono);}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <span class="module">AI Governance Command Center</span>
+  <span class="brand">Bias &amp; Explainability Tracker</span>
+  <span class="tag">Module 03 / 05 · Evidence Checklist + Audit Trail</span>
+</div>
+
+<div class="tabbar">
+  <button class="tab-btn active" id="tab-checklist" onclick="showTab('checklist')">Model Checklist</button>
+  <button class="tab-btn" id="tab-audit" onclick="showTab('audit')">Audit Trail <span class="tab-count" id="audit-count">0</span></button>
+</div>
+
+<div class="tab-panel active" id="panel-checklist">
+<div class="layout">
+
+  <!-- CHECKLIST -->
+  <div class="card">
+    <div class="card-head"><h2>Model Evidence Checklist</h2></div>
+    <div class="card-body">
+      <label for="mname">Model / system name</label>
+      <input type="text" id="mname" placeholder="e.g. Essay evaluator v2">
+
+      <label for="massetid">Linked Asset ID (optional)</label>
+      <input type="text" id="massetid" placeholder="e.g. AI-2026-004 (from Asset Register)">
+
+      <label for="mowner">Reviewer / owner</label>
+      <input type="text" id="mowner" placeholder="e.g. Model Risk Team">
+
+      <div class="category-block">
+        <div class="category-title">Bias &amp; Fairness Evidence</div>
+        <div class="check-item">
+          <div class="item-label">Protected characteristics relevant to this model are identified and documented</div>
+          <select id="b1"><option value="0">Not started</option><option value="0.5">In progress</option><option value="1" selected>Complete</option><option value="na">N/A</option></select>
+        </div>
+        <div class="check-item">
+          <div class="item-label">Bias testing conducted across identified subgroups</div>
+          <select id="b2"><option value="0">Not started</option><option value="0.5" selected>In progress</option><option value="1">Complete</option><option value="na">N/A</option></select>
+        </div>
+        <div class="check-item">
+          <div class="item-label">Disparate impact analysis performed on model outputs</div>
+          <select id="b3"><option value="0" selected>Not started</option><option value="0.5">In progress</option><option value="1">Complete</option><option value="na">N/A</option></select>
+        </div>
+        <div class="check-item">
+          <div class="item-label">Mitigation applied where disparity was found</div>
+          <select id="b4"><option value="0" selected>Not started</option><option value="0.5">In progress</option><option value="1">Complete</option><option value="na">N/A</option></select>
+        </div>
+        <div class="check-item">
+          <div class="item-label">Results independently reviewed (not by the model's own developer)</div>
+          <select id="b5"><option value="0">Not started</option><option value="0.5">In progress</option><option value="1" selected>Complete</option><option value="na">N/A</option></select>
+        </div>
+      </div>
+
+      <div class="category-block">
+        <div class="category-title">Explainability Evidence</div>
+        <div class="check-item">
+          <div class="item-label">Model logic/behavior documented in plain, non-technical language</div>
+          <select id="e1"><option value="0">Not started</option><option value="0.5" selected>In progress</option><option value="1">Complete</option><option value="na">N/A</option></select>
+        </div>
+        <div class="check-item">
+          <div class="item-label">Individual-level explanation available for affected individuals on request</div>
+          <select id="e2"><option value="0" selected>Not started</option><option value="0.5">In progress</option><option value="1">Complete</option><option value="na">N/A</option></select>
+        </div>
+        <div class="check-item">
+          <div class="item-label">Explanation content reviewed for GDPR Art. 22 "meaningful information" adequacy</div>
+          <select id="e3"><option value="0" selected>Not started</option><option value="0.5">In progress</option><option value="1">Complete</option><option value="na">N/A</option></select>
+        </div>
+        <div class="check-item">
+          <div class="item-label">Explanation tested on a non-technical stakeholder for comprehensibility</div>
+          <select id="e4"><option value="0" selected>Not started</option><option value="0.5">In progress</option><option value="1">Complete</option><option value="na">N/A</option></select>
+        </div>
+      </div>
+
+      <label for="mnote">Note for this snapshot (optional)</label>
+      <textarea id="mnote" placeholder="e.g. Bias testing scheduled with data science team for next sprint."></textarea>
+
+      <button class="btn btn-primary" onclick="runChecklist()">Save checklist snapshot</button>
+    </div>
+  </div>
+
+  <!-- OUTPUT -->
+  <div class="card">
+    <div class="card-head"><h2>Evidence Status</h2><span class="count" id="mrun-count">no snapshots yet</span></div>
+    <div id="moutput-body">
+      <div class="empty-state">
+        <div class="mark">Awaiting input</div>
+        <p>Complete the checklist on the left and click "Save checklist snapshot" to see completion status, gap flags, and a citation trail — and to log a timestamped entry to the Audit Trail.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- AUDIT TRAIL -->
+<div class="tab-panel" id="panel-audit">
+  <div class="register-wrap">
+    <div class="register-head">
+      <h2>Audit Trail</h2>
+      <p>One entry per saved checklist snapshot — this session. Each save is a permanent point-in-time record; earlier snapshots are never overwritten.</p>
+    </div>
+    <div id="audit-table-wrap"><div class="register-empty">No snapshots saved yet — save a checklist to populate this log.</div></div>
+  </div>
+</div>
+
+<footer>ai-governance-command-center / src / bias-tracker — evidence checklist + audit-trail log (Day 2)</footer>
+
+<script>
+let mrunCount = 0;
+let auditSeq = 0;
+const auditTrail = [];
+
+function showTab(tab){
+  ['checklist','audit'].forEach(t => {
+    document.getElementById('panel-'+t).classList.toggle('active', t===tab);
+    document.getElementById('tab-'+t).classList.toggle('active', t===tab);
+  });
+}
+
+const biasIds = ['b1','b2','b3','b4','b5'];
+const explainIds = ['e1','e2','e3','e4'];
+
+function pad(n){ return String(n).padStart(3,'0'); }
+
+function categoryPct(ids){
+  let sum = 0, count = 0;
+  ids.forEach(id => {
+    const v = document.getElementById(id).value;
+    if(v !== 'na'){ sum += parseFloat(v); count++; }
+  });
+  if(count === 0) return null; // all marked N/A
+  return Math.round((sum / count) * 100);
+}
+
+function bandForPct(pct){
+  if(pct >= 80) return 'Low';
+  if(pct >= 50) return 'Medium';
+  if(pct >= 25) return 'High';
+  return 'Critical';
+}
+function valueClass(pct){
+  if(pct >= 80) return 'ok';
+  if(pct >= 50) return 'warn';
+  return 'bad';
+}
+
+function runChecklist(){
+  const mname = document.getElementById('mname').value.trim();
+  const massetid = document.getElementById('massetid').value.trim();
+  const mowner = document.getElementById('mowner').value.trim();
+  const mnote = document.getElementById('mnote').value.trim();
+
+  if(!mname){
+    alert('Please enter a model/system name before saving a snapshot.');
+    return;
+  }
+
+  const biasPct = categoryPct(biasIds);
+  const explainPct = categoryPct(explainIds);
+  const validPcts = [biasPct, explainPct].filter(p => p !== null);
+  const overallPct = validPcts.length ? Math.round(validPcts.reduce((a,b)=>a+b,0) / validPcts.length) : 0;
+  const overallBand = bandForPct(overallPct);
+
+  mrunCount++;
+  document.getElementById('mrun-count').textContent = mrunCount + ' snapshot' + (mrunCount>1?'s':'') + ' this session';
+
+  auditSeq++;
+  auditTrail.push({
+    id: 'AT-' + pad(auditSeq),
+    model: mname,
+    assetId: massetid || '—',
+    owner: mowner || '(unassigned)',
+    bias: biasPct === null ? 'N/A' : biasPct + '%',
+    explain: explainPct === null ? 'N/A' : explainPct + '%',
+    overall: overallPct + '%',
+    band: overallBand,
+    note: mnote || '—',
+    timestamp: new Date().toLocaleString()
+  });
+  renderAuditTrail();
+
+  const flags = [];
+  if(biasPct !== null && biasPct < 50){
+    flags.push({text:`Bias &amp; fairness evidence is only ${biasPct}% complete — insufficient documentation to demonstrate fairness testing under NIST AI RMF MEASURE 2.11.`, severity: biasPct < 25 ? 'high':'medium'});
+  }
+  if(explainPct !== null && explainPct < 50){
+    flags.push({text:`Explainability evidence is only ${explainPct}% complete — may not satisfy GDPR Art. 22's "meaningful information" requirement for automated decisions.`, severity: explainPct < 25 ? 'high':'medium'});
+  }
+
+  const flagsHtml = flags.length === 0
+    ? `<div class="no-flags">Both categories meet the 50% evidence threshold — no gap flags raised this snapshot.</div>`
+    : flags.map(f => `<div class="flag-row ${f.severity==='medium'?'medium':''}">${f.text}</div>`).join('');
+
+  const trailRefs = [
+    {fw:'G', ref:'GDPR Art. 22, Art. 13(2)(f)/14(2)(g)', desc:'Right to meaningful information about automated-decision logic — explainability evidence is the primary artifact satisfying this.'},
+    {fw:'N', ref:'NIST AI RMF MEASURE 2.11, MEASURE 3', desc:'Bias testing/benchmarking and explainability measurement — this checklist is the working record for these subcategories.'},
+    {fw:'I', ref:'ISO/IEC 42001 A.6, A.8', desc:'Lifecycle bias-evaluation checkpoints and documented, communicable model behavior for interested parties.'}
+  ];
+  const trailHtml = trailRefs.map(r => `
+    <div class="trail-row">
+      <div class="fw-badge ${r.fw}">${r.fw}</div>
+      <div class="trail-content"><div class="ref">${r.ref}</div><div class="desc">${r.desc}</div></div>
+    </div>
+  `).join('');
+
+  document.getElementById('moutput-body').innerHTML = `
+    <div class="verdict">
+      <div class="score-ring band-${overallBand}"><div class="num">${overallPct}%</div><div class="denom">overall</div></div>
+      <div class="verdict-text">
+        <h3>${mname}</h3>
+        <p>${massetid ? 'Linked to ' + massetid + ' · ' : ''}Snapshot saved ${new Date().toLocaleString()}</p>
+      </div>
+    </div>
+    <div class="subscore-row">
+      <div class="subscore">
+        <div class="label">Bias &amp; Fairness</div>
+        <div class="value ${biasPct===null?'':valueClass(biasPct)}">${biasPct===null?'N/A':biasPct+'%'}</div>
+      </div>
+      <div class="subscore">
+        <div class="label">Explainability</div>
+        <div class="value ${explainPct===null?'':valueClass(explainPct)}">${explainPct===null?'N/A':explainPct+'%'}</div>
+      </div>
+    </div>
+    <div class="section-label">Evidence gap flags</div>
+    <div class="flags">${flagsHtml}</div>
+    <div class="section-label">Cross-framework citation trail</div>
+    <div class="trail">${trailHtml}</div>
+    <div class="disclaimer">This checklist tracks documented evidence status, not the underlying quality of that evidence — "Complete" means the artifact exists and was reviewed, not that the model itself is unbiased. Independent review of evidence content is still required.</div>
+  `;
+}
+
+function renderAuditTrail(){
+  document.getElementById('audit-count').textContent = auditTrail.length;
+  const wrap = document.getElementById('audit-table-wrap');
+  if(auditTrail.length === 0){
+    wrap.innerHTML = '<div class="register-empty">No snapshots saved yet — save a checklist to populate this log.</div>';
+    return;
+  }
+  wrap.innerHTML = `
+    <table class="register">
+      <tr><th>Entry ID</th><th>Model</th><th>Asset ID</th><th>Owner</th><th>Bias %</th><th>Explain %</th><th>Overall</th><th>Band</th><th>Note</th><th>Timestamp</th></tr>
+      ${auditTrail.slice().reverse().map(a => `
+        <tr>
+          <td class="id-cell">${a.id}</td>
+          <td>${a.model}</td>
+          <td class="id-cell">${a.assetId}</td>
+          <td>${a.owner}</td>
+          <td class="id-cell">${a.bias}</td>
+          <td class="id-cell">${a.explain}</td>
+          <td class="id-cell">${a.overall}</td>
+          <td><span class="band-badge badge-${a.band}">${a.band}</span></td>
+          <td>${a.note}</td>
+          <td class="id-cell">${a.timestamp}</td>
+        </tr>
+      `).join('')}
+    </table>`;
+}
+</script>
+
+</body>
+</html>
