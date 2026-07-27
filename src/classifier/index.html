@@ -8,374 +8,90 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#F7F8FA;
-    --panel:#FFFFFF;
-    --ink:#151B26;
-    --ink-soft:#4B5565;
-    --ink-faint:#8A93A3;
-    --line:#E3E7ED;
-    --navy:#111A2E;
-    --navy-soft:#1D2A44;
-    --accent:#2A5CDB;
-    --accent-soft:#EAF0FD;
-    --unacceptable:#B3261E;
-    --unacceptable-bg:#FCEBEA;
-    --high:#C2560C;
-    --high-bg:#FDF0E4;
-    --limited:#9A7B00;
-    --limited-bg:#FBF3D9;
-    --minimal:#1E7A46;
-    --minimal-bg:#E6F4EC;
-    --mono: 'IBM Plex Mono', monospace;
-    --sans: 'IBM Plex Sans', -apple-system, sans-serif;
+    --bg:#F7F8FA; --panel:#FFFFFF; --ink:#151B26; --ink-soft:#4B5565; --ink-faint:#8A93A3; --line:#E3E7ED;
+    --navy:#111A2E; --navy-soft:#1D2A44; --accent:#2A5CDB; --accent-soft:#EAF0FD;
+    --unacceptable:#B3261E; --unacceptable-bg:#FCEBEA; --high:#C2560C; --high-bg:#FDF0E4;
+    --limited:#9A7B00; --limited-bg:#FBF3D9; --minimal:#1E7A46; --minimal-bg:#E6F4EC;
+    --mono:'IBM Plex Mono', monospace; --sans:'IBM Plex Sans', -apple-system, sans-serif;
   }
   *{box-sizing:border-box;}
-  body{
-    margin:0;
-    background:var(--bg);
-    font-family:var(--sans);
-    color:var(--ink);
-    -webkit-font-smoothing:antialiased;
-  }
-  .topbar{
-    background:var(--navy);
-    color:#fff;
-    padding:18px 32px;
-    display:flex;
-    align-items:baseline;
-    gap:14px;
-    border-bottom:3px solid var(--accent);
-  }
+  body{margin:0; background:var(--bg); font-family:var(--sans); color:var(--ink); -webkit-font-smoothing:antialiased;}
+
+  .topbar{background:var(--navy); color:#fff; padding:18px 32px; display:flex; align-items:baseline; gap:14px; border-bottom:3px solid var(--accent);}
   .topbar .brand{font-size:14px; font-weight:600; letter-spacing:0.02em; color:#AEB9CF;}
   .topbar .module{font-size:18px; font-weight:600;}
-  .topbar .tag{
-    margin-left:auto;
-    font-family:var(--mono);
-    font-size:11px;
-    color:#AEB9CF;
-    letter-spacing:0.04em;
-    text-transform:uppercase;
-  }
-  .layout{
-    max-width:1240px;
-    margin:0 auto;
-    padding:32px;
-    display:grid;
-    grid-template-columns:420px 1fr;
-    gap:28px;
-    align-items:start;
-  }
-  @media (max-width: 900px){ .layout{grid-template-columns:1fr;} }
+  .topbar .tag{margin-left:auto; font-family:var(--mono); font-size:11px; color:#AEB9CF; letter-spacing:0.04em; text-transform:uppercase;}
 
-  .card{
-    background:var(--panel);
-    border:1px solid var(--line);
-    border-radius:6px;
-  }
-  .card-head{
-    padding:16px 20px;
-    border-bottom:1px solid var(--line);
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-  }
-  .card-head h2{
-    margin:0;
-    font-size:14px;
-    font-weight:600;
-    letter-spacing:0.01em;
-  }
-  .card-head .count{
-    font-family:var(--mono);
-    font-size:11px;
-    color:var(--ink-faint);
-  }
-  .card-body{padding:20px;}
-
-  label{
-    display:block;
-    font-size:12px;
-    font-weight:600;
-    color:var(--ink-soft);
-    margin-bottom:6px;
-    margin-top:16px;
-  }
-  label:first-child{margin-top:0;}
-  input[type=text], textarea, select{
-    width:100%;
-    padding:10px 12px;
-    border:1px solid var(--line);
-    border-radius:4px;
-    font-family:var(--sans);
-    font-size:13px;
-    color:var(--ink);
-    background:#fff;
-  }
-  textarea{resize:vertical; min-height:88px; line-height:1.5;}
-  input:focus, textarea:focus, select:focus{
-    outline:none;
-    border-color:var(--accent);
-    box-shadow:0 0 0 3px var(--accent-soft);
-  }
-  .hint{font-size:11px; color:var(--ink-faint); margin-top:4px;}
-
-  .btn{
-    display:inline-flex;
-    align-items:center;
-    gap:8px;
-    padding:11px 18px;
-    border-radius:4px;
-    border:none;
-    font-family:var(--sans);
-    font-size:13px;
-    font-weight:600;
-    cursor:pointer;
-  }
-  .btn-primary{background:var(--navy); color:#fff; width:100%; justify-content:center; margin-top:20px;}
-  .btn-primary:hover{background:var(--navy-soft);}
-  .btn-ghost{
-    background:transparent;
-    color:var(--accent);
-    border:1px solid var(--line);
-    font-size:11px;
-    padding:6px 10px;
-  }
-  .btn-ghost:hover{border-color:var(--accent); background:var(--accent-soft);}
-
-  .samples{display:flex; flex-direction:column; gap:6px; margin-top:16px;}
-  .sample-btn{
-    text-align:left;
-    background:#fff;
-    border:1px solid var(--line);
-    border-radius:4px;
-    padding:9px 12px;
-    font-size:12px;
-    color:var(--ink-soft);
-    cursor:pointer;
-    font-family:var(--sans);
-  }
-  .sample-btn:hover{border-color:var(--accent); color:var(--accent);}
-
-  /* Output panel */
-  .empty-state{
-    padding:64px 32px;
-    text-align:center;
-    color:var(--ink-faint);
-  }
-  .empty-state .mark{
-    font-family:var(--mono);
-    font-size:11px;
-    letter-spacing:0.08em;
-    text-transform:uppercase;
-    color:var(--ink-faint);
-    margin-bottom:10px;
-  }
-  .empty-state p{font-size:13px; max-width:360px; margin:8px auto 0; line-height:1.6;}
-
-  .verdict{
-    display:flex;
-    align-items:center;
-    gap:16px;
-    padding:22px 20px;
-    border-bottom:1px solid var(--line);
-  }
-  .tier-badge{
-    font-family:var(--mono);
-    font-size:12px;
-    font-weight:600;
-    letter-spacing:0.03em;
-    text-transform:uppercase;
-    padding:8px 14px;
-    border-radius:4px;
-    white-space:nowrap;
-  }
-  .tier-Unacceptable{color:var(--unacceptable); background:var(--unacceptable-bg);}
-  .tier-High{color:var(--high); background:var(--high-bg);}
-  .tier-Limited{color:var(--limited); background:var(--limited-bg);}
-  .tier-Minimal{color:var(--minimal); background:var(--minimal-bg);}
-
-  .verdict-text h3{margin:0 0 4px; font-size:15px;}
-  .verdict-text p{margin:0; font-size:12px; color:var(--ink-soft); line-height:1.5;}
-
-  .section-label{
-    font-family:var(--mono);
-    font-size:10.5px;
-    letter-spacing:0.08em;
-    text-transform:uppercase;
-    color:var(--ink-faint);
-    padding:16px 20px 8px;
-  }
-
-  .trail{padding:0 20px 20px; display:flex; flex-direction:column; gap:8px;}
-  .trail-row{
-    display:flex;
-    gap:12px;
-    align-items:flex-start;
-    padding:10px 12px;
-    background:#FAFBFC;
-    border:1px solid var(--line);
-    border-radius:4px;
-  }
-  .fw-badge{
-    font-family:var(--mono);
-    font-size:11px;
-    font-weight:700;
-    width:26px;
-    height:26px;
-    min-width:26px;
-    border-radius:4px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    color:#fff;
-  }
-  .fw-badge.G{background:#7C3AED;}
-  .fw-badge.N{background:#0891B2;}
-  .fw-badge.I{background:#1D4ED8;}
-  .trail-content .ref{font-family:var(--mono); font-size:12px; font-weight:600; color:var(--ink);}
-  .trail-content .desc{font-size:12px; color:var(--ink-soft); margin-top:2px; line-height:1.45;}
-
-  .reasoning-box{
-    margin:0 20px 20px;
-    padding:14px 16px;
-    background:#FAFBFC;
-    border-left:3px solid var(--accent);
-    border-radius:0 4px 4px 0;
-    font-size:12.5px;
-    color:var(--ink-soft);
-    line-height:1.6;
-  }
-  .reasoning-box strong{color:var(--ink);}
-
-  .disclaimer{
-    margin:20px;
-    padding:12px 14px;
-    background:var(--limited-bg);
-    border-radius:4px;
-    font-size:11.5px;
-    color:#6B5900;
-    line-height:1.5;
-  }
-
-  footer{
-    max-width:1240px;
-    margin:0 auto;
-    padding:8px 32px 40px;
-    font-size:11px;
-    color:var(--ink-faint);
-    font-family:var(--mono);
-  }
-
-  /* Tab bar */
-  .tabbar{
-    max-width:1240px;
-    margin:0 auto;
-    padding:0 32px;
-    display:flex;
-    gap:4px;
-    border-bottom:1px solid var(--line);
-    background:var(--panel);
-  }
-  .tab-btn{
-    background:transparent;
-    border:none;
-    border-bottom:2px solid transparent;
-    padding:14px 16px;
-    font-family:var(--sans);
-    font-size:13px;
-    font-weight:600;
-    color:var(--ink-faint);
-    cursor:pointer;
-    display:flex;
-    align-items:center;
-    gap:8px;
-  }
+  .tabbar{max-width:1240px; margin:0 auto; padding:0 32px; display:flex; gap:4px; border-bottom:1px solid var(--line); background:var(--panel);}
+  .tab-btn{background:transparent; border:none; border-bottom:2px solid transparent; padding:14px 16px; font-family:var(--sans); font-size:13px; font-weight:600; color:var(--ink-faint); cursor:pointer; display:flex; align-items:center; gap:8px;}
   .tab-btn:hover{color:var(--ink-soft);}
   .tab-btn.active{color:var(--accent); border-bottom-color:var(--accent);}
-  .tab-count{
-    font-family:var(--mono);
-    font-size:10px;
-    background:var(--accent-soft);
-    color:var(--accent);
-    padding:2px 7px;
-    border-radius:10px;
-  }
+  .tab-count{font-family:var(--mono); font-size:10px; background:var(--accent-soft); color:var(--accent); padding:2px 7px; border-radius:10px;}
   .tab-btn.active .tab-count{background:var(--accent); color:#fff;}
   .tab-panel{display:none;}
   .tab-panel.active{display:block;}
 
-  /* Register tables */
-  .register-wrap{
-    max-width:1240px;
-    margin:0 auto;
-    padding:24px 32px;
-  }
-  .register-head{
-    display:flex;
-    align-items:baseline;
-    justify-content:space-between;
-    margin-bottom:14px;
-  }
+  .layout{max-width:1240px; margin:0 auto; padding:32px; display:grid; grid-template-columns:420px 1fr; gap:28px; align-items:start;}
+  @media (max-width: 900px){ .layout{grid-template-columns:1fr;} }
+
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:6px;}
+  .card-head{padding:16px 20px; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between;}
+  .card-head h2{margin:0; font-size:14px; font-weight:600; letter-spacing:0.01em;}
+  .card-head .count{font-family:var(--mono); font-size:11px; color:var(--ink-faint);}
+  .card-body{padding:20px;}
+
+  label{display:block; font-size:12px; font-weight:600; color:var(--ink-soft); margin-bottom:6px; margin-top:16px;}
+  label:first-child{margin-top:0;}
+  input[type=text], textarea, select{width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:4px; font-family:var(--sans); font-size:13px; color:var(--ink); background:#fff;}
+  textarea{resize:vertical; min-height:88px; line-height:1.5;}
+  input:focus, textarea:focus, select:focus{outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft);}
+
+  .btn{display:inline-flex; align-items:center; gap:8px; padding:11px 18px; border-radius:4px; border:none; font-family:var(--sans); font-size:13px; font-weight:600; cursor:pointer;}
+  .btn-primary{background:var(--navy); color:#fff; width:100%; justify-content:center; margin-top:20px;}
+  .btn-primary:hover{background:var(--navy-soft);}
+
+  .samples{display:flex; flex-direction:column; gap:6px; margin-top:16px;}
+  .sample-btn{text-align:left; background:#fff; border:1px solid var(--line); border-radius:4px; padding:9px 12px; font-size:12px; color:var(--ink-soft); cursor:pointer; font-family:var(--sans);}
+  .sample-btn:hover{border-color:var(--accent); color:var(--accent);}
+
+  .empty-state{padding:64px 32px; text-align:center; color:var(--ink-faint);}
+  .empty-state .mark{font-family:var(--mono); font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:var(--ink-faint); margin-bottom:10px;}
+  .empty-state p{font-size:13px; max-width:360px; margin:8px auto 0; line-height:1.6;}
+
+  .verdict{display:flex; align-items:center; gap:16px; padding:22px 20px; border-bottom:1px solid var(--line);}
+  .tier-badge{font-family:var(--mono); font-size:12px; font-weight:600; letter-spacing:0.03em; text-transform:uppercase; padding:8px 14px; border-radius:4px; white-space:nowrap;}
+  .tier-Unacceptable{color:var(--unacceptable); background:var(--unacceptable-bg);}
+  .tier-High{color:var(--high); background:var(--high-bg);}
+  .tier-Limited{color:var(--limited); background:var(--limited-bg);}
+  .tier-Minimal{color:var(--minimal); background:var(--minimal-bg);}
+  .verdict-text h3{margin:0 0 4px; font-size:15px;}
+  .verdict-text p{margin:0; font-size:12px; color:var(--ink-soft); line-height:1.5;}
+
+  .section-label{font-family:var(--mono); font-size:10.5px; letter-spacing:0.08em; text-transform:uppercase; color:var(--ink-faint); padding:16px 20px 8px;}
+  .trail{padding:0 20px 20px; display:flex; flex-direction:column; gap:8px;}
+  .trail-row{display:flex; gap:12px; align-items:flex-start; padding:10px 12px; background:#FAFBFC; border:1px solid var(--line); border-radius:4px;}
+  .fw-badge{font-family:var(--mono); font-size:11px; font-weight:700; width:26px; height:26px; min-width:26px; border-radius:4px; display:flex; align-items:center; justify-content:center; color:#fff;}
+  .fw-badge.G{background:#7C3AED;} .fw-badge.N{background:#0891B2;} .fw-badge.I{background:#1D4ED8;}
+  .trail-content .ref{font-family:var(--mono); font-size:12px; font-weight:600; color:var(--ink);}
+  .trail-content .desc{font-size:12px; color:var(--ink-soft); margin-top:2px; line-height:1.45;}
+
+  .reasoning-box{margin:0 20px 20px; padding:14px 16px; background:#FAFBFC; border-left:3px solid var(--accent); border-radius:0 4px 4px 0; font-size:12.5px; color:var(--ink-soft); line-height:1.6;}
+  .reasoning-box strong{color:var(--ink);}
+  .disclaimer{margin:20px; padding:12px 14px; background:var(--limited-bg); border-radius:4px; font-size:11.5px; color:#6B5900; line-height:1.5;}
+
+  .register-wrap{max-width:1240px; margin:0 auto; padding:24px 32px;}
+  .register-head{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:14px;}
   .register-head h2{font-size:16px; margin:0;}
   .register-head p{font-size:12px; color:var(--ink-soft); margin:4px 0 0;}
-  table.register{
-    width:100%;
-    border-collapse:collapse;
-    background:var(--panel);
-    border:1px solid var(--line);
-    border-radius:6px;
-    overflow:hidden;
-    font-size:12.5px;
-  }
-  table.register th{
-    text-align:left;
-    background:#F5F6F8;
-    padding:10px 12px;
-    font-size:10.5px;
-    letter-spacing:0.04em;
-    text-transform:uppercase;
-    color:var(--ink-faint);
-    border-bottom:1px solid var(--line);
-    font-family:var(--mono);
-    font-weight:600;
-  }
-  table.register td{
-    padding:10px 12px;
-    border-bottom:1px solid var(--line);
-    color:var(--ink-soft);
-    vertical-align:top;
-  }
+  table.register{width:100%; border-collapse:collapse; background:var(--panel); border:1px solid var(--line); border-radius:6px; overflow:hidden; font-size:12.5px;}
+  table.register th{text-align:left; background:#F5F6F8; padding:10px 12px; font-size:10.5px; letter-spacing:0.04em; text-transform:uppercase; color:var(--ink-faint); border-bottom:1px solid var(--line); font-family:var(--mono); font-weight:600;}
+  table.register td{padding:10px 12px; border-bottom:1px solid var(--line); color:var(--ink-soft); vertical-align:top;}
   table.register tr:last-child td{border-bottom:none;}
   table.register .id-cell{font-family:var(--mono); font-size:11.5px; color:var(--ink); white-space:nowrap;}
-  table.register select, table.register input[type=text]{
-    font-size:11.5px;
-    padding:5px 7px;
-    border:1px solid var(--line);
-    border-radius:3px;
-    width:100%;
-    font-family:var(--sans);
-  }
-  .sev-badge{
-    font-family:var(--mono);
-    font-size:10.5px;
-    font-weight:600;
-    padding:3px 8px;
-    border-radius:3px;
-    white-space:nowrap;
-  }
-  .sev-Critical{background:var(--unacceptable-bg); color:var(--unacceptable);}
-  .sev-High{background:var(--high-bg); color:var(--high);}
-  .sev-Medium{background:var(--limited-bg); color:var(--limited);}
-  .sev-Low{background:var(--minimal-bg); color:var(--minimal);}
-  .register-empty{
-    padding:48px 20px;
-    text-align:center;
-    color:var(--ink-faint);
-    font-size:13px;
-    background:var(--panel);
-    border:1px solid var(--line);
-    border-radius:6px;
-  }
+  table.register select, table.register input[type=text]{font-size:11.5px; padding:5px 7px; border:1px solid var(--line); border-radius:3px; width:100%; font-family:var(--sans);}
+  .register-empty{padding:48px 20px; text-align:center; color:var(--ink-faint); font-size:13px; background:var(--panel); border:1px solid var(--line); border-radius:6px;}
+
+  footer{max-width:1240px; margin:0 auto; padding:8px 32px 40px; font-size:11px; color:var(--ink-faint); font-family:var(--mono);}
 </style>
 </head>
 <body>
@@ -395,11 +111,8 @@
 <div class="tab-panel active" id="panel-classifier">
 <div class="layout">
 
-  <!-- INPUT PANEL -->
   <div class="card">
-    <div class="card-head">
-      <h2>AI Use Case Intake</h2>
-    </div>
+    <div class="card-head"><h2>AI Use Case Intake</h2></div>
     <div class="card-body">
       <label for="name">Use case name</label>
       <input type="text" id="name" placeholder="e.g. Resume screening tool">
@@ -443,17 +156,14 @@
           <button class="sample-btn" onclick="loadSample(0)">Clinical diagnostic AI — retinopathy screening</button>
           <button class="sample-btn" onclick="loadSample(1)">Automated resume screening for hiring</button>
           <button class="sample-btn" onclick="loadSample(2)">Internal support chatbot</button>
+          <button class="sample-btn" onclick="loadSample(3)">HR policy assistant (no decision authority)</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- OUTPUT PANEL -->
   <div class="card" id="output-card">
-    <div class="card-head">
-      <h2>Classification Output</h2>
-      <span class="count" id="run-count">no runs yet</span>
-    </div>
+    <div class="card-head"><h2>Classification Output</h2><span class="count" id="run-count">no runs yet</span></div>
     <div id="output-body">
       <div class="empty-state">
         <div class="mark">Awaiting input</div>
@@ -465,27 +175,19 @@
 </div>
 </div>
 
-<!-- ASSET REGISTER PANEL -->
 <div class="tab-panel" id="panel-assets">
   <div class="register-wrap">
     <div class="register-head">
-      <div>
-        <h2>AI Asset Register</h2>
-        <p>Auto-populated from every classification run this session. One row per AI system.</p>
-      </div>
+      <div><h2>AI Asset Register</h2><p>Auto-populated from every classification run this session. One row per AI system.</p></div>
     </div>
     <div id="asset-table-wrap"><div class="register-empty">No assets logged yet — run a classification to populate this register.</div></div>
   </div>
 </div>
 
-<!-- RISK REGISTER PANEL -->
 <div class="tab-panel" id="panel-risks">
   <div class="register-wrap">
     <div class="register-head">
-      <div>
-        <h2>Risk Register</h2>
-        <p>One entry per identified risk, linked to its asset, with severity/likelihood and treatment status. Edit mitigation and status inline.</p>
-      </div>
+      <div><h2>Risk Register</h2><p>One entry per identified risk, linked to its asset, with severity/likelihood and treatment status. Edit mitigation and status inline.</p></div>
     </div>
     <div id="risk-table-wrap"><div class="register-empty">No risks logged yet — run a classification to populate this register.</div></div>
   </div>
@@ -497,8 +199,8 @@
 let runCount = 0;
 let assetSeq = 0;
 let riskSeq = 0;
-const assetRegister = [];  // {id, name, owner, tier, deployStatus, dateLogged}
-const riskRegister = [];   // {id, assetId, description, frameworkRef, severity, likelihood, mitigation, status, owner}
+const assetRegister = [];
+const riskRegister = [];
 
 function showTab(tab){
   ['classifier','assets','risks'].forEach(t => {
@@ -519,33 +221,13 @@ function pad(n){ return String(n).padStart(3,'0'); }
 function logToRegisters(name, owner, deployStatus, tier, reason, refs){
   assetSeq++;
   const assetId = 'AI-2026-' + pad(assetSeq);
-  assetRegister.push({
-    id: assetId,
-    name: name || 'Untitled use case',
-    owner: owner || '(unassigned)',
-    tier: tier,
-    deployStatus: deployStatus || 'Piloting',
-    dateLogged: new Date().toISOString().slice(0,10)
-  });
+  assetRegister.push({id:assetId, name:name||'Untitled use case', owner:owner||'(unassigned)', tier:tier, deployStatus:deployStatus||'Piloting', dateLogged:new Date().toISOString().slice(0,10)});
 
-  // Only Unacceptable/High/Limited generate a risk-register entry —
-  // Minimal-tier use cases are logged as assets but don't warrant a tracked risk.
   if(tier !== 'Minimal'){
     riskSeq++;
     const sev = severityMap[tier];
-    riskRegister.push({
-      id: 'R-' + pad(riskSeq),
-      assetId: assetId,
-      description: reason,
-      frameworkRef: refs[0] ? refs[0].ref : '—',
-      severity: sev.severity,
-      likelihood: sev.likelihood,
-      mitigation: '',
-      status: 'Open',
-      owner: owner || '(unassigned)'
-    });
+    riskRegister.push({id:'R-'+pad(riskSeq), assetId:assetId, description:reason, frameworkRef: refs[0]?refs[0].ref:'—', severity:sev.severity, likelihood:sev.likelihood, mitigation:'', status:'Open', owner:owner||'(unassigned)'});
   }
-
   renderRegisters();
 }
 
@@ -554,78 +236,25 @@ function renderRegisters(){
   document.getElementById('risk-count').textContent = riskRegister.length;
 
   const assetWrap = document.getElementById('asset-table-wrap');
-  if(assetRegister.length === 0){
-    assetWrap.innerHTML = '<div class="register-empty">No assets logged yet — run a classification to populate this register.</div>';
-  } else {
-    assetWrap.innerHTML = `
-      <table class="register">
-        <tr><th>Asset ID</th><th>System Name</th><th>Owner</th><th>Risk Tier</th><th>Deployment Status</th><th>Last Logged</th></tr>
-        ${assetRegister.map(a => `
-          <tr>
-            <td class="id-cell">${a.id}</td>
-            <td>${a.name}</td>
-            <td>${a.owner}</td>
-            <td><span class="tier-badge tier-${a.tier}" style="padding:3px 8px; font-size:10.5px;">${a.tier}</span></td>
-            <td>${a.deployStatus}</td>
-            <td>${a.dateLogged}</td>
-          </tr>
-        `).join('')}
-      </table>`;
-  }
+  assetWrap.innerHTML = assetRegister.length === 0
+    ? '<div class="register-empty">No assets logged yet — run a classification to populate this register.</div>'
+    : `<table class="register"><tr><th>Asset ID</th><th>System Name</th><th>Owner</th><th>Risk Tier</th><th>Deployment Status</th><th>Last Logged</th></tr>
+       ${assetRegister.map(a => `<tr><td class="id-cell">${a.id}</td><td>${a.name}</td><td>${a.owner}</td><td><span class="tier-badge tier-${a.tier}" style="padding:3px 8px; font-size:10.5px;">${a.tier}</span></td><td>${a.deployStatus}</td><td>${a.dateLogged}</td></tr>`).join('')}</table>`;
 
   const riskWrap = document.getElementById('risk-table-wrap');
-  if(riskRegister.length === 0){
-    riskWrap.innerHTML = '<div class="register-empty">No risks logged yet — run a classification to populate this register.</div>';
-  } else {
-    riskWrap.innerHTML = `
-      <table class="register">
-        <tr><th>Risk ID</th><th>Linked Asset</th><th>Risk Description</th><th>Framework Ref.</th><th>Severity</th><th>Likelihood</th><th>Mitigation</th><th>Status</th><th>Owner</th></tr>
-        ${riskRegister.map((r, i) => `
-          <tr>
-            <td class="id-cell">${r.id}</td>
-            <td class="id-cell">${r.assetId}</td>
-            <td>${r.description}</td>
-            <td class="id-cell">${r.frameworkRef}</td>
-            <td><span class="sev-badge sev-${r.severity}">${r.severity}</span></td>
-            <td><span class="sev-badge sev-${r.likelihood}">${r.likelihood}</span></td>
-            <td><input type="text" value="${r.mitigation}" placeholder="Add mitigation…" onchange="updateRisk(${i},'mitigation',this.value)"></td>
-            <td>
-              <select onchange="updateRisk(${i},'status',this.value)">
-                <option ${r.status==='Open'?'selected':''}>Open</option>
-                <option ${r.status==='Mitigated'?'selected':''}>Mitigated</option>
-                <option ${r.status==='Accepted'?'selected':''}>Accepted</option>
-              </select>
-            </td>
-            <td>${r.owner}</td>
-          </tr>
-        `).join('')}
-      </table>`;
-  }
+  riskWrap.innerHTML = riskRegister.length === 0
+    ? '<div class="register-empty">No risks logged yet — run a classification to populate this register.</div>'
+    : `<table class="register"><tr><th>Risk ID</th><th>Linked Asset</th><th>Risk Description</th><th>Framework Ref.</th><th>Severity</th><th>Likelihood</th><th>Mitigation</th><th>Status</th><th>Owner</th></tr>
+       ${riskRegister.map((r,i) => `<tr><td class="id-cell">${r.id}</td><td class="id-cell">${r.assetId}</td><td>${r.description}</td><td class="id-cell">${r.frameworkRef}</td><td><span class="fw-badge" style="background:var(--high); width:auto; padding:3px 8px; border-radius:3px;">${r.severity}</span></td><td>${r.likelihood}</td><td><input type="text" value="${r.mitigation}" placeholder="Add mitigation…" onchange="updateRisk(${i},'mitigation',this.value)"></td><td><select onchange="updateRisk(${i},'status',this.value)"><option ${r.status==='Open'?'selected':''}>Open</option><option ${r.status==='Mitigated'?'selected':''}>Mitigated</option><option ${r.status==='Accepted'?'selected':''}>Accepted</option></select></td><td>${r.owner}</td></tr>`).join('')}</table>`;
 }
 
-function updateRisk(index, field, value){
-  riskRegister[index][field] = value;
-}
+function updateRisk(index, field, value){ riskRegister[index][field] = value; }
 
 const samples = [
-  {
-    name: "Clinical diagnostic AI — retinopathy screening",
-    desc: "AI system analyzes retinal images to detect diabetic retinopathy and recommends referral for treatment based on severity classification.",
-    data: "Retinal scan images, patient medical history",
-    context: "Healthcare"
-  },
-  {
-    name: "Automated resume screening for hiring",
-    desc: "AI ranks job applicants by analyzing resumes and predicting fit, used to shortlist candidates before human review in the recruitment pipeline.",
-    data: "CVs, employment history, education records",
-    context: "Employment / HR"
-  },
-  {
-    name: "Internal support chatbot",
-    desc: "Conversational assistant answers employee questions about IT and HR policies using a knowledge base, clearly identified as an AI assistant.",
-    data: "Support ticket text, policy documents",
-    context: "Customer-facing chatbot or assistant"
-  }
+  {name:"Clinical diagnostic AI — retinopathy screening", desc:"AI system analyzes retinal images to detect diabetic retinopathy and recommends referral for treatment based on severity classification.", data:"Retinal scan images, patient medical history", context:"Healthcare"},
+  {name:"Automated resume screening for hiring", desc:"AI ranks job applicants by analyzing resumes and predicting fit, used to shortlist candidates before human review in the recruitment pipeline.", data:"CVs, employment history, education records", context:"Employment / HR"},
+  {name:"Internal support chatbot", desc:"Conversational assistant answers employee questions about IT and HR policies using a knowledge base, clearly identified as an AI assistant.", data:"Support ticket text, policy documents", context:"Customer-facing chatbot or assistant"},
+  {name:"HR policy assistant (no decision authority)", desc:"AI HR Policy Assistant retrieves information from the HR management system after authenticating the employee. All final employment and HR decisions remain with authorized HR personnel.", data:"Employee ID, name, department, job grade, leave balance", context:"Employment / HR"}
 ];
 
 function loadSample(i){
@@ -637,7 +266,6 @@ function loadSample(i){
   runClassifier();
 }
 
-// Crosswalk lookup — mirrors /crosswalk/framework-crosswalk.md
 const crosswalk = {
   Unacceptable: [
     {fw:'G', ref:'GDPR Art. 5(2)', desc:'Immediate lawful-basis re-assessment; processing halt review'},
@@ -662,12 +290,17 @@ const crosswalk = {
   ]
 };
 
-// Each trigger is either:
-//   { kw:[...] }              -> matches if ANY keyword/phrase is present
-//   { any:[...], and:[...] }  -> matches if ANY of `any` AND ANY of `and` are present (co-occurrence)
-// Co-occurrence rules exist because single fixed phrases are too brittle —
-// e.g. "emotion inference in a classroom" should trigger the same rule as
-// "emotion recognition in schools" even though the exact wording differs.
+// Negation guard: suppresses the employment-decision trigger when the text
+// explicitly states a human — not the AI — holds decision authority
+// (e.g. "final decisions remain with HR personnel"). Found via real-world
+// testing: "AI HR Policy Assistant" was misclassified High because it
+// contained both "employment" and "decisions", even though the sentence
+// was disclaiming AI decision-making, not describing it.
+function hasHumanDecisionDisclaimer(text){
+  const disclaimerPhrases = ['remain with','remains with','rests with','are made by','is made by','decided by','approved by'];
+  const humanRoleWords = ['personnel','human','manager','officer','staff','hr team','authorized staff','authorised staff'];
+  return disclaimerPhrases.some(p => text.includes(p)) && humanRoleWords.some(h => text.includes(h));
+}
 
 const schoolWorkplaceContext = ['classroom','school','student','workplace','employee','office','university'];
 const publicAuthorityContext = ['citizen','public authority','government','public benefit','welfare','resident'];
@@ -682,7 +315,7 @@ const unacceptableTriggers = [
 
 const highRiskTriggers = [
   {kw:['hiring','recruit','resume','cv screening','promotion','termination','performance monitoring'], reason:'AI used as a decision or decision-support component in employment'},
-  {any:['employment','employee','workforce','staff'], and:['rank','score','scoring','decision','evaluat','monitor','review','promot','terminat','screen'], reason:'AI used as a decision or decision-support component in employment'},
+  {any:['employment','employee','workforce','staff'], and:['rank','score','scoring','decision','evaluat','monitor','review','promot','terminat','screen'], reason:'AI used as a decision or decision-support component in employment', guard:hasHumanDecisionDisclaimer},
   {kw:['credit','loan','insurance eligib','benefits eligib','essential service'], reason:'AI determines access to an essential private or public service'},
   {kw:['diagnos','triage','treatment recommend','clinical','patient','retinopathy'], reason:'AI used in a healthcare diagnostic or treatment-support role'},
   {any:['screening'], and:['patient','clinical','medical','health','hospital','disease'], reason:'AI used in a healthcare diagnostic or treatment-support role'},
@@ -695,6 +328,7 @@ const highRiskTriggers = [
 
 const limitedRiskTriggers = [
   {kw:['chatbot','virtual assistant','conversational assistant','support bot'], reason:'AI directly interacts with individuals who should know they are engaging with an AI system'},
+  {any:['assistant'], and:['employee','staff','hr ','hr management','policy'], reason:'AI directly interacts with individuals (staff-facing assistant) who should know they are engaging with an AI system'},
   {kw:['deepfake','synthetic media','generate image','generate video','generate audio','content generation'], reason:'AI generates or manipulates image, audio, or video content'},
   {kw:['emotion recognition','biometric categorization'], reason:'emotion recognition or biometric categorization outside banned/high-risk contexts'}
 ];
@@ -706,7 +340,10 @@ function matchTriggers(text, triggers){
     } else if(t.any && t.and){
       const hasAny = t.any.some(k => text.includes(k));
       const hasAnd = t.and.some(k => text.includes(k));
-      if(hasAny && hasAnd) return t.reason;
+      if(hasAny && hasAnd){
+        if(t.guard && t.guard(text)) continue;
+        return t.reason;
+      }
     }
   }
   return null;
@@ -714,16 +351,12 @@ function matchTriggers(text, triggers){
 
 function classify(name, desc, data, context){
   const text = (name + ' ' + desc + ' ' + data + ' ' + context).toLowerCase();
-
   let reason = matchTriggers(text, unacceptableTriggers);
   if(reason) return {tier:'Unacceptable', reason};
-
   reason = matchTriggers(text, highRiskTriggers);
   if(reason) return {tier:'High', reason};
-
   reason = matchTriggers(text, limitedRiskTriggers);
   if(reason) return {tier:'Limited', reason};
-
   return {tier:'Minimal', reason:'no Unacceptable, High, or Limited triggers were matched in the description provided'};
 }
 
@@ -735,10 +368,7 @@ function runClassifier(){
   const owner = document.getElementById('owner').value.trim();
   const deployStatus = document.getElementById('deploystatus').value;
 
-  if(!desc){
-    alert('Please enter a description of the AI use case before classifying.');
-    return;
-  }
+  if(!desc){ alert('Please enter a description of the AI use case before classifying.'); return; }
 
   const result = classify(name, desc, data, context);
   const refs = crosswalk[result.tier];
@@ -747,15 +377,7 @@ function runClassifier(){
 
   logToRegisters(name, owner, deployStatus, result.tier, result.reason, refs);
 
-  const trailHtml = refs.map(r => `
-    <div class="trail-row">
-      <div class="fw-badge ${r.fw}">${r.fw}</div>
-      <div class="trail-content">
-        <div class="ref">${r.ref}</div>
-        <div class="desc">${r.desc}</div>
-      </div>
-    </div>
-  `).join('');
+  const trailHtml = refs.map(r => `<div class="trail-row"><div class="fw-badge ${r.fw}">${r.fw}</div><div class="trail-content"><div class="ref">${r.ref}</div><div class="desc">${r.desc}</div></div></div>`).join('');
 
   const disclaimer = result.tier === 'Minimal'
     ? `<div class="disclaimer">This is a rules-based first pass, not legal advice. If this use case evolves — new data types, new decision authority, new affected population — re-classify.</div>`
@@ -764,10 +386,7 @@ function runClassifier(){
   document.getElementById('output-body').innerHTML = `
     <div class="verdict">
       <div class="tier-badge tier-${result.tier}">${result.tier}</div>
-      <div class="verdict-text">
-        <h3>${name || 'Untitled use case'}</h3>
-        <p>Classified against EU AI Act risk taxonomy · docs/methodology/risk-classifier-methodology.md</p>
-      </div>
+      <div class="verdict-text"><h3>${name || 'Untitled use case'}</h3><p>Classified against EU AI Act risk taxonomy · docs/methodology/risk-classifier-methodology.md</p></div>
     </div>
     <div class="reasoning-box"><strong>Reasoning:</strong> This use case was classified as <strong>${result.tier}</strong> because it matches: ${result.reason}.</div>
     <div class="section-label">Cross-framework citation trail</div>
