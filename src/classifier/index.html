@@ -290,16 +290,26 @@ const crosswalk = {
   ]
 };
 
-// Negation guard: suppresses the employment-decision trigger when the text
-// explicitly states a human — not the AI — holds decision authority
-// (e.g. "final decisions remain with HR personnel"). Found via real-world
-// testing: "AI HR Policy Assistant" was misclassified High because it
-// contained both "employment" and "decisions", even though the sentence
-// was disclaiming AI decision-making, not describing it.
+// Negation guards. Found via real-world testing across three separate
+// bugs: (1) "final decisions remain with HR personnel" was misread as
+// AI decision-making; (2) "does not... recommend promotions... or make
+// employment decisions" still matched the bare 'promotion' keyword from
+// inside "promotions"; (3) "benefits eligibility" (just being retrieved,
+// not decided) matched the bare 'benefits eligib' keyword. All three are
+// the same underlying problem: keyword matching can't see negation. The
+// guard below checks for two common disclaiming patterns and is applied
+// to every High-risk rule, not just the one it was first found on.
 function hasHumanDecisionDisclaimer(text){
   const disclaimerPhrases = ['remain with','remains with','rests with','are made by','is made by','decided by','approved by'];
   const humanRoleWords = ['personnel','human','manager','officer','staff','hr team','authorized staff','authorised staff'];
   return disclaimerPhrases.some(p => text.includes(p)) && humanRoleWords.some(h => text.includes(h));
+}
+function hasDoesNotDisclaimer(text){
+  const negationStarters = ['does not','do not',"doesn't","don't",'is not authorized to','is not permitted to'];
+  return negationStarters.some(n => text.includes(n));
+}
+function hasNegationGuard(text){
+  return hasHumanDecisionDisclaimer(text) || hasDoesNotDisclaimer(text);
 }
 
 const schoolWorkplaceContext = ['classroom','school','student','workplace','employee','office','university'];
@@ -314,16 +324,16 @@ const unacceptableTriggers = [
 ];
 
 const highRiskTriggers = [
-  {kw:['hiring','recruit','resume','cv screening','promotion','termination','performance monitoring'], reason:'AI used as a decision or decision-support component in employment'},
-  {any:['employment','employee','workforce','staff'], and:['rank','score','scoring','decision','evaluat','monitor','review','promot','terminat','screen'], reason:'AI used as a decision or decision-support component in employment', guard:hasHumanDecisionDisclaimer},
-  {kw:['credit','loan','insurance eligib','benefits eligib','essential service'], reason:'AI determines access to an essential private or public service'},
-  {kw:['diagnos','triage','treatment recommend','clinical','patient','retinopathy'], reason:'AI used in a healthcare diagnostic or treatment-support role'},
-  {any:['screening'], and:['patient','clinical','medical','health','hospital','disease'], reason:'AI used in a healthcare diagnostic or treatment-support role'},
-  {kw:['law enforcement','migration','border control','policing'], reason:'AI used in law enforcement, migration, or border-control context'},
-  {kw:['admission','exam scoring','vocational training','student assessment'], reason:'AI used in education or vocational-training assessment'},
-  {any:['screening','suitability score'], and:['admission','applicant','university','college','student'], reason:'AI used in education or vocational-training assessment'},
-  {kw:['critical infrastructure','power grid','water supply','traffic control'], reason:'AI used as a safety component of critical infrastructure'},
-  {kw:['justice','court','sentencing','democratic process','election'], reason:'AI used in administration of justice or democratic processes'}
+  {kw:['hiring','recruit','resume','cv screening','promotion','termination','performance monitoring'], reason:'AI used as a decision or decision-support component in employment', guard:hasNegationGuard},
+  {any:['employment','employee','workforce','staff'], and:['rank','score','scoring','decision','evaluat','monitor','review','promot','terminat','screen'], reason:'AI used as a decision or decision-support component in employment', guard:hasNegationGuard},
+  {kw:['credit','loan','insurance eligib','benefits eligib','essential service'], reason:'AI determines access to an essential private or public service', guard:hasNegationGuard},
+  {kw:['diagnos','triage','treatment recommend','clinical','patient','retinopathy'], reason:'AI used in a healthcare diagnostic or treatment-support role', guard:hasNegationGuard},
+  {any:['screening'], and:['patient','clinical','medical','health','hospital','disease'], reason:'AI used in a healthcare diagnostic or treatment-support role', guard:hasNegationGuard},
+  {kw:['law enforcement','migration','border control','policing'], reason:'AI used in law enforcement, migration, or border-control context', guard:hasNegationGuard},
+  {kw:['admission','exam scoring','vocational training','student assessment'], reason:'AI used in education or vocational-training assessment', guard:hasNegationGuard},
+  {any:['screening','suitability score'], and:['admission','applicant','university','college','student'], reason:'AI used in education or vocational-training assessment', guard:hasNegationGuard},
+  {kw:['critical infrastructure','power grid','water supply','traffic control'], reason:'AI used as a safety component of critical infrastructure', guard:hasNegationGuard},
+  {kw:['justice','court','sentencing','democratic process','election'], reason:'AI used in administration of justice or democratic processes', guard:hasNegationGuard}
 ];
 
 const limitedRiskTriggers = [
@@ -336,7 +346,12 @@ const limitedRiskTriggers = [
 function matchTriggers(text, triggers){
   for(const t of triggers){
     if(t.kw){
-      for(const kw of t.kw){ if(text.includes(kw)) return t.reason; }
+      for(const kw of t.kw){
+        if(text.includes(kw)){
+          if(t.guard && t.guard(text)) break;
+          return t.reason;
+        }
+      }
     } else if(t.any && t.and){
       const hasAny = t.any.some(k => text.includes(k));
       const hasAnd = t.and.some(k => text.includes(k));
