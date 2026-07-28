@@ -57,29 +57,47 @@ Does the use case involve:
 
 ---
 
-## 2a. Matching approach — and what testing changed about it
+## 2a. Matching approach, round one — co-occurrence and stemming
 
-The rules in Section 2 above describe the *criteria*. This section documents *how* the implementation in `src/classifier/index.html` actually detects them in free-text input, because the first version was tested against edge cases and found to be too brittle — three real issues surfaced, and each one changed the design:
+The rules above describe the *criteria*. This section and the next document *how* the implementation in `src/classifier/index.html` actually detects them in free-text input — because testing repeatedly found the first, simpler version too brittle. Each fix changed the design in a specific way.
 
 **Issue 1 — Fixed phrases missed paraphrased concepts.**
-The first version looked for exact phrases like `"emotion recognition school"`. A real input like *"emotion recognition system deployed in classrooms"* didn't match, because it never contains that literal phrase — it fell through to a lower tier than the rules intended.
-→ **Fix:** switched to **co-occurrence matching** — check for a concept word (e.g. `emotion`) appearing *anywhere* in the text alongside a context word (e.g. `classroom`, `school`, `workplace`), rather than requiring one fixed sentence.
+The first version looked for exact phrases like `"emotion recognition school"`. A real input like *"emotion recognition system deployed in classrooms"* didn't match, because it never contains that literal phrase.
+→ **Fix:** **co-occurrence matching** — a concept word (e.g. `emotion`) appearing anywhere alongside a context word (e.g. `classroom`, `school`, `workplace`), rather than one fixed sentence.
 
 **Issue 2 — Pluralization broke exact substring matches.**
-A phrase-based rule for `"score citizens"` didn't match the input *"scores citizens"* — the extra "s" from pluralization broke a literal substring check.
-→ **Fix:** switched to **word-stem matching** (e.g. `scor` catches score / scores / scoring / scored) combined with co-occurrence, so grammatical variation doesn't break detection.
+`"score citizens"` didn't match `"scores citizens"` — the extra "s" broke a literal substring check.
+→ **Fix:** **word-stem matching** (e.g. `scor` catches score / scores / scoring / scored) combined with co-occurrence.
 
-**Issue 3 — Broadening a rule to fix Issue 2 introduced false positives.**
-Once "employee" was added as a general employment-risk keyword, an unrelated internal support chatbot ("answers *employee* questions about IT and HR policies") was incorrectly flagged as a High-risk employment use case, even though it makes no employment decision.
-→ **Fix:** split employment detection into (a) strong, unambiguous direct terms (`hiring`, `recruit`, `termination`) that trigger High risk on their own, and (b) softer terms (`employee`, `workforce`, `staff`) that only trigger High risk in **co-occurrence** with an actual decision-context word (`rank`, `score`, `evaluate`, `monitor`, `promote`, `screen`) — so mentioning employees isn't enough; the AI has to be making or supporting a decision about them.
+**Issue 3 — Broadening a rule to fix Issue 2 introduced a false positive.**
+Adding "employee" as a general employment keyword caused an unrelated support chatbot ("answers *employee* questions about IT and HR policies") to be flagged High, even though it makes no employment decision.
+→ **Fix:** split employment detection into strong, unambiguous direct terms (`hiring`, `recruit`, `termination`) versus softer terms (`employee`, `workforce`, `staff`) that only trigger in **co-occurrence** with an actual decision-context word (`rank`, `score`, `evaluate`, `monitor`, `promote`, `screen`).
 
-**The general principle this established:** every keyword-based rule in this classifier is now checked against at least one deliberate false-positive case before being considered final — a rule is not "done" when it catches the case it was written for; it's done when it doesn't *also* catch cases it shouldn't. The test suite covering this (12 edge cases + 3 reference-case regressions, all passing) lives alongside the module and should be re-run any time a keyword list changes.
+---
+
+## 2b. Matching approach, round two — negation blindness
+
+A later, more demanding real-world test exposed a deeper problem that co-occurrence and stemming alone don't solve: **keyword matching cannot see negation.** A sentence can contain exactly the right trigger words while *explicitly denying* that the AI does the thing those words describe — and a substring-matching classifier has no way to tell the difference. This surfaced as three separate real bugs, found through one realistic test description (an internal HR policy assistant chatbot), not synthetic edge cases:
+
+**Bug 1 — "Decisions remain with humans" read as AI decision-making.**
+*"All final employment and HR decisions **remain with** authorized HR personnel."* contains both "employment" and "decision" — enough to fire the employment co-occurrence rule — even though the sentence is stating the AI has **no** decision role at all.
+→ **Fix:** `hasHumanDecisionDisclaimer()` — checks for a disclaiming phrase (`remain with`, `rests with`, `is made by`, `approved by`, etc.) co-occurring with a human-role word (`personnel`, `manager`, `staff`, `human`). If found, the trigger is suppressed.
+
+**Bug 2 — A negated verb list still matched a bare keyword.**
+*"The system **does not** evaluate employee performance, monitor behaviour, rank employees, recommend **promotions**... or make employment decisions."* — this sentence is a list of things the AI explicitly does **not** do. But the word "promotion" is a substring of "promotions," and the *strong keyword* rule (`hiring`, `recruit`, `promotion`, `termination`...) had **no guard at all** — it fired immediately, before the negation was ever considered.
+→ **Fix:** `hasDoesNotDisclaimer()` — checks for a "does not / doesn't / is not authorized to" construction anywhere in the text.
+
+**Bug 3 — A third, different unguarded rule caught a third false positive.**
+The same test description also contains *"...the system may retrieve relevant information... about their own leave balance or **benefits eligibility**."* — just looking a number up, not deciding it. But this matched the *essential-service* rule's bare keyword `'benefits eligib'`, a rule that had never been touched by the first two fixes.
+→ **Root cause identified:** patching one rule at a time was whack-a-mole — negation blindness is a property of *every* keyword-based rule, not a one-off. **Fix:** a single combined guard (`hasNegationGuard()`, checking both disclaimer patterns) is now applied to **every rule in the High-risk tier**, not just the one it happened to be discovered on.
+
+**The general principle this established (revised):** a keyword rule is not "done" when it correctly catches the case it was written for and survives a handful of hand-picked false-positive checks. It is only trustworthy once a *structural* class of failure — here, negation — has been checked against **every** rule that could plausibly exhibit it, not just the rule where it was first noticed. The test suite (15+ cases, including the full real-world HR assistant description that triggered this round of fixes, plus regression checks confirming genuine High-risk cases still fire correctly) lives alongside the module and should be re-run whenever any keyword list changes.
 
 ---
 
 ## 3. What each tier triggers (cross-framework obligations)
 
-This is where the classifier's output becomes useful — each tier auto-populates the specific controls required, pulled directly from `/crosswalk/framework-crosswalk.md`:
+Each tier auto-populates the specific controls required, pulled directly from `/crosswalk/framework-crosswalk.md`:
 
 | Tier | GDPR obligations triggered | NIST AI RMF functions activated | ISO/IEC 42001 controls activated |
 |---|---|---|---|
@@ -103,17 +121,17 @@ Required Actions:
   - ISO/IEC 42001: [specific clause/Annex A control]
 ```
 
-This citation-trail format is the core design decision of this module: **no output without a traceable regulatory reference.** A risk tier with no citation is not defensible in an actual governance context, and this project is built to the standard of one that would be.
+This citation-trail format is the core design decision of this module: **no output without a traceable regulatory reference.**
 
 ---
 
 ## 5. Known limitations (stated deliberately)
 
 - This is a rules-based first pass, not a substitute for legal review — genuinely ambiguous use cases should always be escalated to human review, and the tool should say so explicitly rather than force a confident answer.
-- Co-occurrence and stem matching (Section 2a) made detection more robust than the original fixed-phrase approach, but it is still keyword-based, not semantic — a use case that describes a genuinely high-risk scenario using none of the anticipated vocabulary (e.g. an unfamiliar euphemism, or a non-English input) will under-classify to Minimal rather than raise a flag. A production version would pair this rules engine with a human review step for low-confidence or borderline cases, rather than relying on keywords alone.
+- Co-occurrence, stemming, and the negation guards (Sections 2a, 2b) made detection substantially more robust than the original fixed-phrase approach, but it remains keyword-based, not semantic. More complex negation constructions than "does not X" or "remains with Y" (double negatives, conditional or hypothetical framing, sarcasm) are not guaranteed to be caught. A production version would pair this rules engine with a human review step for low-confidence or borderline cases rather than relying on keywords alone.
 - The EU AI Act's Annex III high-risk list is illustrative here, not reproduced in full — a production system would need the complete, current annex text kept in sync with amendments.
 - This taxonomy is EU-centric by design (for legibility); a fuller build would layer in jurisdiction-specific variants (e.g. UAE National AI Strategy 2031, US state-level AI laws) as a secondary tag rather than replacing the primary tier.
 
 ---
 
-*Next: this logic gets implemented in `src/classifier` as the actual application code, with the crosswalk lookup wired in programmatically.*
+*This module has now been through three rounds of real-world testing and fixes (documented in 2a and 2b above), each one making the underlying logic more robust rather than just patching the one failing case in isolation.*
